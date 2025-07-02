@@ -146,6 +146,30 @@ export interface MonthlyResetStatus {
   daysSinceLastReset: number;
 }
 
+// Unexpected Expenses types
+export interface UnexpectedExpense {
+  id: string;
+  label: string;
+  amount: number;
+  category: UnexpectedExpenseCategory;
+  date: string;
+  description?: string;
+  userId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type UnexpectedExpenseCategory = 
+  | 'medical'
+  | 'car_repair'
+  | 'home_repair'
+  | 'family'
+  | 'work'
+  | 'technology'
+  | 'legal'
+  | 'emergency'
+  | 'other';
+
 // Categories
 export type IncomeCategory = 
   | 'salary'
