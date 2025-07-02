@@ -123,16 +123,22 @@ export class ExpensesService {
     }
   }
 
-  async remove(id: string, user_id: string): Promise<void> {
+  async remove(user_id: string, id: string) {
     try {
+      const expense = await this.findOne(id, user_id);
+
       await this.prisma.rec_expenses.delete({
         where: {
           id,
         },
       });
 
-      this.logger.log(`Expense deleted: ${id}`);
+   this.logger.log(`Expense deleted: ${expense.label} for user ${user_id}`);
+      return { message: 'Expense successfully deleted' };
     } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
       this.logger.error('Error deleting expense:', error);
       throw new Error('Failed to delete expense');
     }

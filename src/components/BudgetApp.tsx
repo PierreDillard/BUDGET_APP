@@ -111,14 +111,16 @@ export default function BudgetApp() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#f0f4ff] to-[#e2e8f0] p-4 md:flex">
+   
+      <div className="min-h-screen bg-slate-900 text-white flex">
       {/* Sidebar for Desktop */}
-      <aside className="hidden md:flex flex-col w-64 backdrop-blur-lg bg-white/30 p-4 shadow-lg rounded-2xl mr-4 border border-white/20">
+      <aside className="hidden md:flex flex-col w-80 bg-slate-800 shadow-2xl">
         {/* User Info */}
-        <div className="mb-4 p-3 bg-white/20 rounded-lg">
-          <p className="text-sm font-medium text-gray-800">{user?.email}</p>
-          <p className="text-xs text-gray-600">Devise: {user?.currency}</p>
+        <div className="p-6 border-b border-slate-700">
+          <p className="text-sm font-medium text-slate-300">{user?.email}</p>
+          <p className="text-xs text-slate-400">Devise: {user?.currency}</p>
         </div>
+
 
         <nav className="flex flex-col gap-2 flex-1">
           <Button 
@@ -164,7 +166,7 @@ export default function BudgetApp() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1">
+      <main className="flex-1 bg-slate-200">
         {/* Mobile Header */}
         <div className="md:hidden flex items-center justify-between mb-4 p-3 backdrop-blur-lg bg-white/30 rounded-xl border border-white/20">
           <div>
@@ -234,7 +236,7 @@ export default function BudgetApp() {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-3">
                   <div>
-                    <p className="text-sm text-gray-600">Solde actuel</p>
+                    <p className="text-xl font-bold text-gray-600">Solde actuel</p>
                     <h2 className={`text-2xl font-bold ${
                       balanceData.currentBalance >= 0 ? 'text-green-600' : 'text-red-600'
                     }`}>
@@ -263,19 +265,14 @@ export default function BudgetApp() {
               </CardContent>
             </Card>
 
-            {/* Projection Chart */}
-            <Card className="mb-4 backdrop-blur-lg bg-white/40 border border-white/30 shadow-lg">
-              <CardContent className="p-4">
-                <ProjectionChart />
-              </CardContent>
-            </Card>
+        
 
             {/* Cartes résumées */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
               <Card className="backdrop-blur-lg bg-white/40 border border-white/30 shadow-md">
                 <CardContent className="p-4">
-                  <p className="text-gray-700">Revenus fixes</p>
-                  <h3 className="text-lg font-semibold text-green-600">
+                  <p className="text-gray-700 font-bold text-2xl">Revenus fixes</p>
+                  <h3 className="text-2xl font-bold text-green-600">
                     +{balanceData.totalIncome.toFixed(2)} {currencySymbol}
                   </h3>
                   <p className="text-xs text-gray-500">{incomes.length} source{incomes.length > 1 ? 's' : ''}</p>
@@ -283,8 +280,8 @@ export default function BudgetApp() {
               </Card>
               <Card className="backdrop-blur-lg bg-white/40 border border-white/30 shadow-md">
                 <CardContent className="p-4">
-                  <p className="text-gray-700">Dépenses fixes</p>
-                  <h3 className="text-lg font-semibold text-red-600">
+                  <p className="text-gray-700 font-bold text-2xl">Dépenses fixes</p>
+                  <h3 className=" font-bold text-red-600 text-2xl">
                     -{balanceData.totalExpenses.toFixed(2)} {currencySymbol}
                   </h3>
                   <p className="text-xs text-gray-500">{expenses.length} dépense{expenses.length > 1 ? 's' : ''}</p>
@@ -292,8 +289,8 @@ export default function BudgetApp() {
               </Card>
               <Card className="backdrop-blur-lg bg-white/40 border border-white/30 shadow-md">
                 <CardContent className="p-4">
-                  <p className="text-gray-700">Budgets ponctuels</p>
-                  <h3 className="text-lg font-semibold text-orange-600">
+                  <p className="text-gray-700 font-bold text-2xl">Budgets ponctuels</p>
+                  <h3 className="text-2xl font-bold text-yellow-500">
                     {balanceData.totalPlanned.toFixed(2)} {currencySymbol}
                   </h3>
                   <p className="text-xs text-gray-500">
@@ -302,6 +299,12 @@ export default function BudgetApp() {
                 </CardContent>
               </Card>
             </div>
+                {/* Projection Chart */}
+            <Card className="mb-4 backdrop-blur-lg bg-white/40 border border-white/30 shadow-lg">
+              <CardContent className="p-4">
+                <ProjectionChart />
+              </CardContent>
+            </Card>
 
             {/* Historique des ajustements */}
             <BalanceAdjustmentHistory />
