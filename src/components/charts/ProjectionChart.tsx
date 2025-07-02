@@ -72,8 +72,8 @@ export function ProjectionChart() {
       const events = data.events;
 
       return (
-        <div className="bg-white/95 backdrop-blur-lg border border-white/20 rounded-lg p-3 shadow-lg max-w-xs">
-          <p className="font-medium text-gray-800">
+        <div className="bg-slate-800 backdrop-blur-lg border border-white/20 rounded-lg p-3 shadow-lg max-w-xs">
+          <p className="font-medium text-gray-100">
             {date.toLocaleDateString('fr-FR', { 
               weekday: 'long',
               day: 'numeric', 
@@ -81,7 +81,7 @@ export function ProjectionChart() {
             })}
           </p>
           <p className={`text-lg font-bold ${
-            data.balance >= 0 ? 'text-green-600' : 'text-red-600'
+            data.balance >= 0 ? 'text-gray-200' : 'text-red-600'
           }`}>
             {data.balance.toFixed(2)} {currencySymbol}
           </p>
@@ -90,9 +90,9 @@ export function ProjectionChart() {
             <div className="mt-2 space-y-1">
               {events.incomes?.length > 0 && (
                 <div>
-                  <p className="text-xs font-medium text-green-700">Revenus :</p>
+                  <p className="text-xs font-medium text-gray-200">Revenus :</p>
                   {events.incomes.map((income: any, i: number) => (
-                    <p key={i} className="text-xs text-green-600">
+                    <p key={i} className="text-xs text-gray-100">
                       + {income.amount.toFixed(2)} {currencySymbol} ({income.label})
                     </p>
                   ))}
@@ -101,9 +101,9 @@ export function ProjectionChart() {
               
               {events.expenses?.length > 0 && (
                 <div>
-                  <p className="text-xs font-medium text-red-700">Dépenses :</p>
+                  <p className="text-xs font-medium text-gray-200">Dépenses :</p>
                   {events.expenses.map((expense: any, i: number) => (
-                    <p key={i} className="text-xs text-red-600">
+                    <p key={i} className="text-xs text-gray-100">
                       - {expense.amount.toFixed(2)} {currencySymbol} ({expense.label})
                     </p>
                   ))}
@@ -112,9 +112,9 @@ export function ProjectionChart() {
               
               {events.plannedExpenses?.length > 0 && (
                 <div>
-                  <p className="text-xs font-medium text-orange-700">Budgets :</p>
+                  <p className="text-xs font-medium text-gray-100">Budgets :</p>
                   {events.plannedExpenses.map((planned: any, i: number) => (
-                    <p key={i} className="text-xs text-orange-600">
+                    <p key={i} className="text-xs text-gray-200">
                       - {planned.amount.toFixed(2)} {currencySymbol} ({planned.label})
                     </p>
                   ))}

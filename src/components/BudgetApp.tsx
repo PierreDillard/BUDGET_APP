@@ -13,6 +13,7 @@ import { BalanceAdjustmentModal, BalanceAdjustmentHistory } from "@/components/b
 import { MonthlyResetModal, MonthlyResetAlert } from "@/components/balance/MonthlyResetModal";
 import { Toaster } from "@/components/ui/toaster";
 import { ProjectionChart } from "@/components/charts/ProjectionChart";
+import { ProjectionChartDark } from './charts/ProjectionChartDark';
 
 export default function BudgetApp() {
   const { 
@@ -272,7 +273,7 @@ export default function BudgetApp() {
               <Card className="backdrop-blur-lg bg-white/40 border border-white/30 shadow-md">
                 <CardContent className="p-4">
                   <p className="text-gray-700 font-bold text-2xl">Revenus fixes</p>
-                  <h3 className="text-2xl font-bold text-green-600">
+                  <h3 className="text-3xl font-bold text-green-600">
                     +{balanceData.totalIncome.toFixed(2)} {currencySymbol}
                   </h3>
                   <p className="text-xs text-gray-500">{incomes.length} source{incomes.length > 1 ? 's' : ''}</p>
@@ -281,7 +282,7 @@ export default function BudgetApp() {
               <Card className="backdrop-blur-lg bg-white/40 border border-white/30 shadow-md">
                 <CardContent className="p-4">
                   <p className="text-gray-700 font-bold text-2xl">Dépenses fixes</p>
-                  <h3 className=" font-bold text-red-600 text-2xl">
+                  <h3 className=" font-bold text-red-600 text-3xl">
                     -{balanceData.totalExpenses.toFixed(2)} {currencySymbol}
                   </h3>
                   <p className="text-xs text-gray-500">{expenses.length} dépense{expenses.length > 1 ? 's' : ''}</p>
@@ -290,7 +291,7 @@ export default function BudgetApp() {
               <Card className="backdrop-blur-lg bg-white/40 border border-white/30 shadow-md">
                 <CardContent className="p-4">
                   <p className="text-gray-700 font-bold text-2xl">Budgets ponctuels</p>
-                  <h3 className="text-2xl font-bold text-yellow-500">
+                  <h3 className="text-3xl font-bold text-yellow-500">
                     {balanceData.totalPlanned.toFixed(2)} {currencySymbol}
                   </h3>
                   <p className="text-xs text-gray-500">
