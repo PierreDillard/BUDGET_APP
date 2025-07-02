@@ -13,7 +13,6 @@ import { BalanceAdjustmentModal, BalanceAdjustmentHistory } from "@/components/b
 import { MonthlyResetModal, MonthlyResetAlert } from "@/components/balance/MonthlyResetModal";
 import { Toaster } from "@/components/ui/toaster";
 import { ProjectionChart } from "@/components/charts/ProjectionChart";
-import { ProjectionChartDark } from './charts/ProjectionChartDark';
 
 export default function BudgetApp() {
   const { 

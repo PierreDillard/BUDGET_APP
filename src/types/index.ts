@@ -99,6 +99,14 @@ export interface CreatePlannedExpenseRequest {
   category?: string;
 }
 
+export interface CreateUnexpectedExpenseRequest {
+  label: string;
+  amount: number;
+  category: UnexpectedExpenseCategory;
+  date: string;
+  description?: string;
+}
+
 // Authentication types
 export interface LoginRequest {
   email: string;

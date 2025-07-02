@@ -3,13 +3,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { Plus, AlertTriangle, Settings, LogOut, Calculator, RefreshCw } from "lucide-react";
+import { AlertTriangle, Settings, LogOut } from "lucide-react";
 import { useBudgetStore } from "@/store/budgetStore";
 import { RevenueExpenseScreen } from "@/components/screens/RevenueExpenseScreen";
 import { PlannedExpensesScreen } from "@/components/screens/PlannedExpensesScreen";
 import { SettingsScreen } from "@/components/screens/SettingsScreen";
 import AuthScreen from "@/components/auth/AuthScreen";
-import { BalanceAdjustmentModal, BalanceAdjustmentHistory } from "@/components/balance/BalanceAdjustmentModal";
+import { BalanceAdjustmentModal } from "@/components/balance/BalanceAdjustmentModal";
 import { MonthlyResetModal, MonthlyResetAlert } from "@/components/balance/MonthlyResetModal";
 import { Toaster } from "@/components/ui/toaster";
 import { ProjectionChartDark } from "@/components/charts/ProjectionChartDark";
@@ -87,7 +87,6 @@ export default function BudgetAppDark() {
   });
 
   const isNegativeProjection = balanceData.projectedBalance < 0;
-  const currencySymbol = user?.currency === 'USD' ? '$' : user?.currency === 'GBP' ? '£' : '€';
 
   const handleLogout = async () => {
     try {

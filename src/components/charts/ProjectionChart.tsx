@@ -1,18 +1,7 @@
 import { useEffect, useState } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
+import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Area, AreaChart } from 'recharts';
 import { Calendar, TrendingUp, TrendingDown, AlertTriangle } from 'lucide-react';
 import { useBudgetStore } from "@/store/budgetStore";
-
-interface ProjectionDataPoint {
-  date: string;
-  balance: number;
-  day: number;
-  events?: {
-    incomes: Array<{ label: string; amount: number }>;
-    expenses: Array<{ label: string; amount: number }>;
-    plannedExpenses: Array<{ label: string; amount: number }>;
-  };
-}
 
 export function ProjectionChart() {
   const { 
@@ -59,69 +48,81 @@ export function ProjectionChart() {
   const minBalance = Math.min(...chartData.map(d => d.balance));
   const maxBalance = Math.max(...chartData.map(d => d.balance));
   const hasNegativeProjection = minBalance < 0;
+  const isPositiveTrend = finalBalance >= currentBalance;
 
-  // Configuration des couleurs
-  const lineColor = hasNegativeProjection ? '#ef4444' : currentBalance >= 0 ? '#10b981' : '#f59e0b';
+  // Configuration des couleurs et symbole monétaire
   const currencySymbol = user?.currency === 'USD' ? '$' : user?.currency === 'GBP' ? '£' : '€';
 
-  // Custom tooltip
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  // Custom tooltip amélioré avec données dynamiques
+  const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       const date = new Date(data.date);
-      const events = data.events;
+      const events = data.events || { incomes: [], expenses: [], plannedExpenses: [] };
+
+      // Calculer les totaux pour cette date
+      const totalIncomes = events.incomes?.reduce((sum: number, income: any) => sum + income.amount, 0) || 0;
+      const totalExpenses = events.expenses?.reduce((sum: number, expense: any) => sum + expense.amount, 0) || 0;
+      const totalPlanned = events.plannedExpenses?.reduce((sum: number, expense: any) => sum + expense.amount, 0) || 0;
 
       return (
-        <div className="bg-slate-800 backdrop-blur-lg border border-white/20 rounded-lg p-3 shadow-lg max-w-xs">
-          <p className="font-medium text-gray-100">
+        <div className="bg-white/95 backdrop-blur-sm border border-gray-200 rounded-xl p-4 shadow-2xl">
+          <p className="font-medium text-gray-800 mb-3 text-center">
             {date.toLocaleDateString('fr-FR', { 
               weekday: 'long',
               day: 'numeric', 
-              month: 'long' 
+              month: 'long',
+              year: 'numeric'
             })}
           </p>
-          <p className={`text-lg font-bold ${
-            data.balance >= 0 ? 'text-gray-200' : 'text-red-600'
-          }`}>
-            {data.balance.toFixed(2)} {currencySymbol}
-          </p>
           
-          {events && (
-            <div className="mt-2 space-y-1">
-              {events.incomes?.length > 0 && (
-                <div>
-                  <p className="text-xs font-medium text-gray-200">Revenus :</p>
-                  {events.incomes.map((income: any, i: number) => (
-                    <p key={i} className="text-xs text-gray-100">
-                      + {income.amount.toFixed(2)} {currencySymbol} ({income.label})
-                    </p>
-                  ))}
-                </div>
-              )}
-              
-              {events.expenses?.length > 0 && (
-                <div>
-                  <p className="text-xs font-medium text-gray-200">Dépenses :</p>
-                  {events.expenses.map((expense: any, i: number) => (
-                    <p key={i} className="text-xs text-gray-100">
-                      - {expense.amount.toFixed(2)} {currencySymbol} ({expense.label})
-                    </p>
-                  ))}
-                </div>
-              )}
-              
-              {events.plannedExpenses?.length > 0 && (
-                <div>
-                  <p className="text-xs font-medium text-gray-100">Budgets :</p>
-                  {events.plannedExpenses.map((planned: any, i: number) => (
-                    <p key={i} className="text-xs text-gray-200">
-                      - {planned.amount.toFixed(2)} {currencySymbol} ({planned.label})
-                    </p>
-                  ))}
-                </div>
-              )}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-full shadow-sm"></div>
+                <span className="text-gray-700 text-sm">Solde</span>
+              </div>
+              <span className={`font-bold text-sm ${data.balance >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                {data.balance?.toFixed(2)} {currencySymbol}
+              </span>
             </div>
-          )}
+            
+            {totalIncomes > 0 && (
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-gradient-to-r from-blue-400 to-blue-500 rounded-full shadow-sm"></div>
+                  <span className="text-gray-700 text-sm">Revenus</span>
+                </div>
+                <span className="text-blue-600 font-semibold text-sm">
+                  +{totalIncomes.toFixed(2)} {currencySymbol}
+                </span>
+              </div>
+            )}
+            
+            {totalExpenses > 0 && (
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-gradient-to-r from-red-400 to-red-500 rounded-full shadow-sm"></div>
+                  <span className="text-gray-700 text-sm">Dépenses</span>
+                </div>
+                <span className="text-red-600 font-semibold text-sm">
+                  -{totalExpenses.toFixed(2)} {currencySymbol}
+                </span>
+              </div>
+            )}
+            
+            {totalPlanned > 0 && (
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-gradient-to-r from-orange-400 to-orange-500 rounded-full shadow-sm"></div>
+                  <span className="text-gray-700 text-sm">Budget ponctuel</span>
+                </div>
+                <span className="text-orange-600 font-semibold text-sm">
+                  -{totalPlanned.toFixed(2)} {currencySymbol}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
       );
     }
@@ -194,58 +195,147 @@ export function ProjectionChart() {
       )}
 
       {/* Graphique */}
-      <div className="h-64">
+      <div className="h-64 relative">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+          <AreaChart data={chartData}>
+            <defs>
+              {/* Gradient principal - positif */}
+              <linearGradient id="positiveGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#10b981" stopOpacity={0.8} />
+                <stop offset="50%" stopColor="#34d399" stopOpacity={0.4} />
+                <stop offset="100%" stopColor="#6ee7b7" stopOpacity={0.1} />
+              </linearGradient>
+              
+              {/* Gradient négatif */}
+              <linearGradient id="negativeGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#ef4444" stopOpacity={0.8} />
+                <stop offset="50%" stopColor="#f87171" stopOpacity={0.4} />
+                <stop offset="100%" stopColor="#fca5a5" stopOpacity={0.1} />
+              </linearGradient>
+              
+              {/* Gradient de transition */}
+              <linearGradient id="transitionGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#f59e0b" stopOpacity={0.8} />
+                <stop offset="50%" stopColor="#fbbf24" stopOpacity={0.4} />
+                <stop offset="100%" stopColor="#fde68a" stopOpacity={0.1} />
+              </linearGradient>
+              
+              {/* Filtres pour effets visuels */}
+              <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                <feMerge> 
+                  <feMergeNode in="coloredBlur"/>
+                  <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+              </filter>
+            </defs>
+            
+            <CartesianGrid 
+              strokeDasharray="3 3" 
+              stroke="#e5e7eb" 
+              opacity={0.6}
+            />
+            
             <XAxis 
               dataKey="dayLabel" 
               stroke="#6b7280"
               fontSize={12}
               interval="preserveStartEnd"
+              tick={{ fill: '#6b7280' }}
             />
+            
             <YAxis 
               stroke="#6b7280"
               fontSize={12}
+              tick={{ fill: '#6b7280' }}
               tickFormatter={(value) => `${value.toFixed(0)} ${currencySymbol}`}
             />
             
-            {/* Ligne de référence à 0 */}
-            <ReferenceLine y={0} stroke="#9ca3af" strokeDasharray="2 2" />
+            {/* Ligne de référence à 0 avec style amélioré */}
+            <ReferenceLine 
+              y={0} 
+              stroke="#9ca3af" 
+              strokeDasharray="4 4" 
+              strokeWidth={2}
+              opacity={0.8}
+            />
             
             <Tooltip content={<CustomTooltip />} />
             
-            <Line
+            <Area
               type="monotone"
               dataKey="balance"
-              stroke={lineColor}
+              stroke={hasNegativeProjection ? '#ef4444' : (isPositiveTrend ? '#10b981' : '#f59e0b')}
               strokeWidth={3}
-              dot={{ fill: lineColor, strokeWidth: 2, r: 4 }}
-              activeDot={{ r: 6, stroke: lineColor, strokeWidth: 2 }}
+              fill={`url(#${hasNegativeProjection ? 'negativeGradient' : (isPositiveTrend ? 'positiveGradient' : 'transitionGradient')})`}
+              dot={{ 
+                fill: hasNegativeProjection ? '#ef4444' : (isPositiveTrend ? '#10b981' : '#f59e0b'), 
+                strokeWidth: 2, 
+                r: 4,
+                filter: "url(#glow)"
+              }}
+              activeDot={{ 
+                r: 8, 
+                stroke: hasNegativeProjection ? '#ef4444' : (isPositiveTrend ? '#10b981' : '#f59e0b'), 
+                strokeWidth: 3,
+                fill: '#ffffff',
+                filter: "url(#glow)"
+              }}
+              style={{
+                filter: "url(#glow)"
+              }}
             />
-          </LineChart>
+          </AreaChart>
         </ResponsiveContainer>
+        
+        {/* Indicateur de tendance en overlay */}
+        <div className="absolute top-2 right-2">
+          <div className={`
+            px-3 py-1 rounded-full text-xs font-medium backdrop-blur-sm border
+            ${isPositiveTrend 
+              ? 'bg-emerald-50/80 text-emerald-700 border-emerald-200' 
+              : 'bg-red-50/80 text-red-700 border-red-200'
+            }
+          `}>
+            {isPositiveTrend ? (
+              <div className="flex items-center gap-1">
+                <TrendingUp className="h-3 w-3" />
+                <span>Tendance positive</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1">
+                <TrendingDown className="h-3 w-3" />
+                <span>Tendance négative</span>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
-      {/* Légende */}
-      <div className="flex items-center justify-between text-xs text-gray-600">
-        <div className="flex items-center gap-4">
+      {/* Légende améliorée avec gradients */}
+      <div className="flex items-center justify-between text-xs">
+        <div className="flex items-center gap-6">
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-            <span>Revenus</span>
+            <div className="w-4 h-3 bg-gradient-to-r from-blue-400 to-blue-500 rounded-sm shadow-sm"></div>
+            <span className="text-gray-700 font-medium">Revenus</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-            <span>Dépenses</span>
+            <div className="w-4 h-3 bg-gradient-to-r from-red-400 to-red-500 rounded-sm shadow-sm"></div>
+            <span className="text-gray-700 font-medium">Dépenses</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
-            <span>Budgets ponctuels</span>
+            <div className="w-4 h-3 bg-gradient-to-r from-orange-400 to-orange-500 rounded-sm shadow-sm"></div>
+            <span className="text-gray-700 font-medium">Budgets ponctuels</span>
           </div>
         </div>
         
         <div className="text-right">
-          <p>Amplitude : {(maxBalance - minBalance).toFixed(2)} {currencySymbol}</p>
+          <div className="flex items-center gap-2">
+            <span className="text-gray-600">Amplitude:</span>
+            <span className="font-semibold text-gray-800">
+              {(maxBalance - minBalance).toFixed(2)} {currencySymbol}
+            </span>
+          </div>
         </div>
       </div>
     </div>
