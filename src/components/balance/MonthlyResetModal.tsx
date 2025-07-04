@@ -321,22 +321,7 @@ export function MonthlyResetAlert() {
   if (!resetStatus?.isResetDue) return null;
 
   return (
-    <Alert variant="destructive" className="mb-4 backdrop-blur-lg bg-red-100/40 border border-red-300/40 shadow-md">
-      <Calendar className="h-4 w-4" />
-      <AlertTitle>Réinitialisation mensuelle recommandée</AlertTitle>
-      <AlertDescription className="flex items-center justify-between">
-        <span>
-          Votre budget mensuel devrait être réinitialisé depuis {resetStatus.daysSinceLastReset} jour{resetStatus.daysSinceLastReset > 1 ? 's' : ''}.
-        </span>
-        <MonthlyResetModal 
-          trigger={
-            <Button size="sm" variant="outline" className="ml-2">
-              Réinitialiser
-            </Button>
-          }
-        />
-      </AlertDescription>
-    </Alert>
+  <div></div>
   );
 }
 

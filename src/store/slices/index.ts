@@ -5,3 +5,4 @@ export { createPlannedExpenseSlice } from './plannedExpenseSlice';
 export { createBalanceSlice } from './balanceSlice';
 export { createUISlice } from './uiSlice';
 export { createUnexpectedExpenseSlice } from './unexpectedExpenseSlice';
+export { createProjectBudgetSlice } from './projectBudgetSlice';

@@ -125,12 +125,12 @@ export function PlannedExpensesScreen() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 mx-4">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-800">Budgets ponctuels</h1>
         <Button 
           onClick={handleAdd} 
-          className="bg-blue-600 hover:bg-blue-700"
+          className="bg-red-400 hover:bg-red-500 text-black"
           disabled={isLoading}
         >
           <Plus className="h-4 w-4 mr-2" />

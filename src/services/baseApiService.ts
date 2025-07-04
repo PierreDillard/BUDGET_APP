@@ -1,5 +1,6 @@
-import { API_BASE_URL } from './config';
 import { TokenManager } from './tokenManager';
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api/v1';
 
 export abstract class BaseApiService {
   protected baseURL: string;
@@ -102,5 +103,44 @@ export abstract class BaseApiService {
     } catch {
       return false;
     }
+  }
+
+  // Méthodes HTTP helper
+  protected async get<T>(endpoint: string): Promise<{ data: T }> {
+    const result = await this.request<T>(endpoint, {
+      method: 'GET',
+    });
+    return { data: result };
+  }
+
+  protected async post<T>(endpoint: string, data?: any): Promise<{ data: T }> {
+    const result = await this.request<T>(endpoint, {
+      method: 'POST',
+      body: data ? JSON.stringify(data) : undefined,
+    });
+    return { data: result };
+  }
+
+  protected async put<T>(endpoint: string, data?: any): Promise<{ data: T }> {
+    const result = await this.request<T>(endpoint, {
+      method: 'PUT',
+      body: data ? JSON.stringify(data) : undefined,
+    });
+    return { data: result };
+  }
+
+  protected async delete<T = void>(endpoint: string): Promise<{ data: T }> {
+    const result = await this.request<T>(endpoint, {
+      method: 'DELETE',
+    });
+    return { data: result };
+  }
+
+  protected async patch<T>(endpoint: string, data?: any): Promise<{ data: T }> {
+    const result = await this.request<T>(endpoint, {
+      method: 'PATCH',
+      body: data ? JSON.stringify(data) : undefined,
+    });
+    return { data: result };
   }
 }

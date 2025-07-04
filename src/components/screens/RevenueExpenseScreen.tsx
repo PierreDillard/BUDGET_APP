@@ -95,24 +95,25 @@ export function RevenueExpenseScreen() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 mx-4">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-800">Revenus et Dépenses</h1>
         <div className="flex gap-2">
           <Button 
             onClick={handleAddIncome} 
-            className="bg-green-600 hover:bg-green-700"
+            className="bg-green-400 hover:bg-green-500 text-black"
             disabled={isLoading}
           >
-            <Plus className="h-4 w-4 mr-2" />
+            <Plus className="h-4 w-4 mr-2 text-black" />
             Ajouter un revenu
           </Button>
           <Button 
             onClick={handleAddExpense} 
+            className="bg-red-400 hover:bg-red-500 text-black"
             variant="outline"
             disabled={isLoading}
           >
-            <Plus className="h-4 w-4 mr-2" />
+            <Plus className="h-4 w-4 mr-2 text-black" />
             Ajouter une dépense
           </Button>
         </div>

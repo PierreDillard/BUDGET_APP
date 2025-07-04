@@ -8,6 +8,7 @@ import { useBudgetStore } from "@/store/budgetStore";
 import { RevenueExpenseScreen } from "@/components/screens/RevenueExpenseScreen";
 import { PlannedExpensesScreen } from "@/components/screens/PlannedExpensesScreen";
 import { SettingsScreen } from "@/components/screens/SettingsScreen";
+import { ProjectBudgetDashboard } from "@/components/projectBudget/ProjectBudgetDashboard";
 import AuthScreen from "@/components/auth/AuthScreen";
 import { BalanceAdjustmentModal, BalanceAdjustmentHistory } from "@/components/balance/BalanceAdjustmentModal";
 import { MonthlyResetModal, MonthlyResetAlert } from "@/components/balance/MonthlyResetModal";
@@ -114,7 +115,7 @@ export default function BudgetApp() {
    
       <div className="min-h-screen bg-slate-900 text-white flex">
       {/* Sidebar for Desktop */}
-      <aside className="hidden md:flex flex-col w-80 bg-slate-800 shadow-2xl">
+      <aside className="hidden md:flex flex-col w-80 bg-slate-800 shadow-2xl ">
         {/* User Info */}
         <div className="p-6 border-b border-slate-700">
           <p className="text-sm font-medium text-slate-300">{user?.email}</p>
@@ -146,6 +147,13 @@ export default function BudgetApp() {
           </Button>
           <Button 
             variant="ghost"
+            className={currentTab === 'project-budgets' ? 'bg-white/40' : ''}
+            onClick={() => setCurrentTab('project-budgets')}
+          >
+            Budgets projets
+          </Button>
+          <Button 
+            variant="ghost"
             className={currentTab === 'settings' ? 'bg-white/40' : ''}
             onClick={() => setCurrentTab('settings')}
           >
@@ -166,7 +174,7 @@ export default function BudgetApp() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 bg-slate-200">
+      <main className="flex-1 bg-slate-200 ">
         {/* Mobile Header */}
         <div className="md:hidden flex items-center justify-between mb-4 p-3 backdrop-blur-lg bg-white/30 rounded-xl border border-white/20">
           <div>
@@ -210,18 +218,19 @@ export default function BudgetApp() {
         {/* Monthly Reset Alert */}
         <MonthlyResetAlert />
 
-        <Tabs value={currentTab} onValueChange={setCurrentTab}>
-          <TabsList className="md:hidden grid grid-cols-4 mb-4 backdrop-blur-lg bg-white/30 border border-white/20 rounded-xl shadow-sm">
+        <Tabs value={currentTab} onValueChange={setCurrentTab} >
+          <TabsList className="md:hidden grid grid-cols-5 mb-4 backdrop-blur-lg bg-white/30 border border-white/20 rounded-xl shadow-sm">
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
             <TabsTrigger value="revenus">Revenus</TabsTrigger>
             <TabsTrigger value="budgets">Budgets</TabsTrigger>
+            <TabsTrigger value="project-budgets">Projets</TabsTrigger>
             <TabsTrigger value="settings">Paramètres</TabsTrigger>
           </TabsList>
 
           {/* Dashboard Tab */}
           <TabsContent value="dashboard">
             <div className="flex justify-between items-center mb-4">
-              <h1 className="text-xl font-bold text-gray-800 capitalize">
+              <h1 className="text-2xl ml-2 font-bold text-gray-800 capitalize">
                 {currentMonth}
               </h1>
               <span className={`text-xl font-semibold ${
@@ -232,7 +241,7 @@ export default function BudgetApp() {
             </div>
 
             {/* Solde actuel avec actions */}
-            <Card className="mb-4 backdrop-blur-lg bg-white/40 border border-white/30 shadow-lg">
+            <Card className="mb-4  backdrop-blur-lg bg-white/40 border border-white/30 shadow-lg">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-3">
                   <div>
@@ -271,7 +280,7 @@ export default function BudgetApp() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
               <Card className="backdrop-blur-lg bg-white/40 border border-white/30 shadow-md">
                 <CardContent className="p-4">
-                  <p className="text-gray-700 font-bold text-2xl">Revenus fixes</p>
+                  <p className="text-gray-700 font-bold text-2xl mb-4">Revenus fixes</p>
                   <h3 className="text-2xl font-bold text-green-600">
                     +{balanceData.totalIncome.toFixed(2)} {currencySymbol}
                   </h3>
@@ -280,7 +289,7 @@ export default function BudgetApp() {
               </Card>
               <Card className="backdrop-blur-lg bg-white/40 border border-white/30 shadow-md">
                 <CardContent className="p-4">
-                  <p className="text-gray-700 font-bold text-2xl">Dépenses fixes</p>
+                  <p className="text-gray-700 font-bold text-2xl mb-4">Dépenses fixes</p>
                   <h3 className=" font-bold text-red-600 text-2xl">
                     -{balanceData.totalExpenses.toFixed(2)} {currencySymbol}
                   </h3>
@@ -289,7 +298,7 @@ export default function BudgetApp() {
               </Card>
               <Card className="backdrop-blur-lg bg-white/40 border border-white/30 shadow-md">
                 <CardContent className="p-4">
-                  <p className="text-gray-700 font-bold text-2xl">Budgets ponctuels</p>
+                  <p className="text-gray-700 font-bold text-2xl mb-4">Budgets ponctuels</p>
                   <h3 className="text-2xl font-bold text-yellow-500">
                     {balanceData.totalPlanned.toFixed(2)} {currencySymbol}
                   </h3>
@@ -334,6 +343,11 @@ export default function BudgetApp() {
           {/* Budgets tab (CRUD) */}
           <TabsContent value="budgets">
             <PlannedExpensesScreen />
+          </TabsContent>
+
+          {/* Project Budgets tab */}
+          <TabsContent value="project-budgets">
+            <ProjectBudgetDashboard />
           </TabsContent>
 
           {/* Paramètres */}

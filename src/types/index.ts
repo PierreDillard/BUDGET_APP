@@ -289,3 +289,6 @@ export interface DashboardData {
     date: string;
   }>;
 }
+
+// Export project budget types
+export * from './projectBudget';

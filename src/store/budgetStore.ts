@@ -9,7 +9,8 @@ import {
   createPlannedExpenseSlice,
   createBalanceSlice,
   createUISlice,
-  createUnexpectedExpenseSlice
+  createUnexpectedExpenseSlice,
+  createProjectBudgetSlice
 } from './slices';
 
 export const useBudgetStore = create<BudgetStore>()(
@@ -23,6 +24,7 @@ export const useBudgetStore = create<BudgetStore>()(
       ...createBalanceSlice(set, get),
       ...createUISlice(set, get),
       ...createUnexpectedExpenseSlice(set, get),
+      ...createProjectBudgetSlice(set, get),
 
       // Global actions that need to coordinate between slices
       loadAllData: async () => {
@@ -37,6 +39,9 @@ export const useBudgetStore = create<BudgetStore>()(
             apiService.getBalance(),
             apiService.getBalanceProjection()
           ]);
+
+          // Charger aussi les budgets de projets
+          await get().loadProjectBudgets();
 
           set((state) => ({
             ...state,

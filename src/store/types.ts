@@ -11,7 +11,12 @@ import type {
   CreateIncomeRequest,
   CreateExpenseRequest,
   CreatePlannedExpenseRequest,
-  BalanceAdjustmentRequest
+  BalanceAdjustmentRequest,
+  ProjectBudget,
+  CreateProjectBudgetRequest,
+  UpdateProjectBudgetRequest,
+  AddContributionRequest,
+  ProjectBudgetStats
 } from '../types';
 
 // Auth slice state and actions
@@ -102,6 +107,30 @@ export interface UIActions {
   dismissMonthlyResetAlert: () => void;
 }
 
+// Project Budget slice state and actions
+export interface ProjectBudgetState {
+  projectBudgets: ProjectBudget[];
+  selectedProjectBudget: ProjectBudget | null;
+  projectBudgetStats: ProjectBudgetStats | null;
+  isLoadingProjectBudgets: boolean;
+  projectBudgetError: string | null;
+}
+
+export interface ProjectBudgetActions {
+  loadProjectBudgets: () => Promise<void>;
+  createProjectBudget: (data: CreateProjectBudgetRequest) => Promise<ProjectBudget>;
+  updateProjectBudget: (id: string, data: UpdateProjectBudgetRequest) => Promise<ProjectBudget>;
+  deleteProjectBudget: (id: string) => Promise<void>;
+  addContribution: (projectBudgetId: string, data: AddContributionRequest) => Promise<void>;
+  allocateMonthlyAmount: (id: string, data: { amount: number; description?: string }) => Promise<ProjectBudget>;
+  completeProjectBudget: (id: string) => Promise<void>;
+  pauseProjectBudget: (id: string) => Promise<void>;
+  resumeProjectBudget: (id: string) => Promise<void>;
+  selectProjectBudget: (id: string | null) => void;
+  loadProjectBudgetStats: () => Promise<void>;
+  clearProjectBudgetError: () => void;
+}
+
 // Combined store interface
 export interface BudgetStore extends 
   AuthState, 
@@ -110,12 +139,14 @@ export interface BudgetStore extends
   PlannedExpenseState, 
   BalanceState, 
   UIState,
+  ProjectBudgetState,
   AuthActions,
   IncomeActions,
   ExpenseActions,
   PlannedExpenseActions,
   BalanceActions,
-  UIActions {
+  UIActions,
+  ProjectBudgetActions {
   // Global actions
   loadAllData: () => Promise<void>;
   clearData: () => void;
