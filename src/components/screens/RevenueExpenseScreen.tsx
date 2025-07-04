@@ -101,7 +101,7 @@ export function RevenueExpenseScreen() {
         <div className="flex gap-2">
           <Button 
             onClick={handleAddIncome} 
-            className="bg-green-400 hover:bg-green-500 text-black"
+            className="bg-gray-300 hover:bg-gray-400 text-black"
             disabled={isLoading}
           >
             <Plus className="h-4 w-4 mr-2 text-black" />
@@ -109,7 +109,7 @@ export function RevenueExpenseScreen() {
           </Button>
           <Button 
             onClick={handleAddExpense} 
-            className="bg-red-400 hover:bg-red-500 text-black"
+            className="bg-gray-300 hover:bg-gray-400 text-black"
             variant="outline"
             disabled={isLoading}
           >
@@ -121,7 +121,7 @@ export function RevenueExpenseScreen() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="backdrop-blur-lg bg-green-100/40 border border-green-300/30 shadow-md">
+        <Card className="backdrop-blur-lg bg-white/40 hover:bg-white/60 transition-colors duration-200  border border-green-300/30 shadow-md">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -138,7 +138,7 @@ export function RevenueExpenseScreen() {
           </CardContent>
         </Card>
 
-        <Card className="backdrop-blur-lg bg-red-100/40 border border-red-300/30 shadow-md">
+        <Card className="backdrop-blur-lg bg-white/40 hover:bg-white/60 transition-colors duration-200 border border-red-300/30 shadow-md">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -155,21 +155,21 @@ export function RevenueExpenseScreen() {
           </CardContent>
         </Card>
 
-        <Card className="backdrop-blur-lg bg-blue-100/40 border border-blue-300/30 shadow-md">
+        <Card className="backdrop-blur-lg bg-white/40 hover:bg-white/60 transition-colors duration-200 border border-blue-300/30 shadow-md">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-blue-700">Solde mensuel</p>
+                <p className="text-sm text-black">Solde mensuel</p>
                 <h3 className={`text-2xl font-bold ${
-                  totalIncomes - totalExpenses >= 0 ? 'text-green-800' : 'text-red-800'
+                  totalIncomes - totalExpenses >= 0 ? 'text-yellow-500' : 'text-red-800'
                 }`}>
                   {formatCurrency(totalIncomes - totalExpenses)}
                 </h3>
-                <p className="text-xs text-blue-600 mt-1">
+                <p className="text-xs text-blackmt-1">
                   Avant budgets ponctuels
                 </p>
               </div>
-              <Euro className="h-8 w-8 text-blue-600" />
+              <Euro className="h-8 w-8 text-black" />
             </div>
           </CardContent>
         </Card>
@@ -187,7 +187,7 @@ export function RevenueExpenseScreen() {
 
         {/* Incomes Tab */}
         <TabsContent value="incomes" className="space-y-4">
-          <Card className="backdrop-blur-lg bg-white/40 border border-white/30 shadow-lg">
+          <Card className="backdrop-blur-lg bg-white/40 hover:bg-white/60 transition-colors duration-200  border border-white/30 shadow-lg">
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 <span>Revenus récurrents</span>

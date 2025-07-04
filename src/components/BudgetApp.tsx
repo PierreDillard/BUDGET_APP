@@ -219,7 +219,7 @@ export default function BudgetApp() {
         <MonthlyResetAlert />
 
         <Tabs value={currentTab} onValueChange={setCurrentTab} >
-          <TabsList className="md:hidden grid grid-cols-5 mb-4 backdrop-blur-lg bg-white/30 border border-white/20 rounded-xl shadow-sm">
+          <TabsList className="md:hidden grid grid-cols-5 mb-4 backdrop-blur-lg bg-white/40 hover:bg-white/60 transition-colors duration-200  border border-white/20 rounded-xl shadow-sm">
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
             <TabsTrigger value="revenus">Revenus</TabsTrigger>
             <TabsTrigger value="budgets">Budgets</TabsTrigger>
@@ -241,11 +241,11 @@ export default function BudgetApp() {
             </div>
 
             {/* Solde actuel avec actions */}
-            <Card className="mb-4  backdrop-blur-lg bg-white/40 border border-white/30 shadow-lg">
+            <Card className="mb-4  backdrop-blur-lg bg-white/40 hover:bg-white/60 transition-colors duration-200 border border-white/30 shadow-lg">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-3">
                   <div>
-                    <p className="text-xl font-bold text-gray-600">Solde actuel</p>
+                    <p className="text-2xl font-bold text-gray-700">Solde actuel</p>
                     <h2 className={`text-2xl font-bold ${
                       balanceData.currentBalance >= 0 ? 'text-green-600' : 'text-red-600'
                     }`}>
@@ -280,7 +280,7 @@ export default function BudgetApp() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
               <Card className="backdrop-blur-lg bg-white/40 border border-white/30 shadow-md">
                 <CardContent className="p-4">
-                  <p className="text-gray-700 font-bold text-2xl mb-4">Revenus fixes</p>
+                  <p className="text-gray-600 font-bold text-2xl mb-4">Revenus fixes</p>
                   <h3 className="text-2xl font-bold text-green-600">
                     +{balanceData.totalIncome.toFixed(2)} {currencySymbol}
                   </h3>
@@ -289,11 +289,11 @@ export default function BudgetApp() {
               </Card>
               <Card className="backdrop-blur-lg bg-white/40 border border-white/30 shadow-md">
                 <CardContent className="p-4">
-                  <p className="text-gray-700 font-bold text-2xl mb-4">Dépenses fixes</p>
+                  <p className="text-gray-600 font-bold text-2xl mb-4">Dépenses fixes</p>
                   <h3 className=" font-bold text-red-600 text-2xl">
                     -{balanceData.totalExpenses.toFixed(2)} {currencySymbol}
                   </h3>
-                  <p className="text-xs text-gray-500">{expenses.length} dépense{expenses.length > 1 ? 's' : ''}</p>
+                  <p className="text-xs text-gray-600">{expenses.length} dépense{expenses.length > 1 ? 's' : ''}</p>
                 </CardContent>
               </Card>
               <Card className="backdrop-blur-lg bg-white/40 border border-white/30 shadow-md">
@@ -309,7 +309,7 @@ export default function BudgetApp() {
               </Card>
             </div>
                 {/* Projection Chart */}
-            <Card className="mb-4 backdrop-blur-lg bg-white/40 border border-white/30 shadow-lg">
+            <Card className="mb-4 backdrop-blur-lg bg-white/40 hover:bg-white/60 transition-colors duration-200 border border-white/30 shadow-lg">
               <CardContent className="p-4">
                 <ProjectionChart />
               </CardContent>

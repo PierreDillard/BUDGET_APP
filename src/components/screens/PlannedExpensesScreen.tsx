@@ -130,7 +130,7 @@ export function PlannedExpensesScreen() {
         <h1 className="text-2xl font-bold text-gray-800">Budgets ponctuels</h1>
         <Button 
           onClick={handleAdd} 
-          className="bg-red-400 hover:bg-red-500 text-black"
+          className="bg-gray-300 hover:bg-gray-400 text-black"
           disabled={isLoading}
         >
           <Plus className="h-4 w-4 mr-2" />
@@ -140,24 +140,25 @@ export function PlannedExpensesScreen() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="backdrop-blur-lg bg-blue-100/40 border border-blue-300/30 shadow-md">
+        <Card className="backdrop-blur-lg bg-white/40 hover:bg-white/60  transition-colors duration-200
+border border-blue-300/30 shadow-md">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-blue-700">Total planifié</p>
-                <h3 className="text-2xl font-bold text-blue-800">
+                <p className="text-sm text-black">Total planifié</p>
+                <h3 className="text-2xl font-bold text-yellow-500">
                   {formatCurrency(totalPlanned)}
                 </h3>
-                <p className="text-xs text-blue-600 mt-1">
+                <p className="text-xs text-black mt-1">
                   {plannedExpenses.length} budget{plannedExpenses.length > 1 ? 's' : ''}
                 </p>
               </div>
-              <Calendar className="h-8 w-8 text-blue-600" />
+              <Calendar className="h-8 w-8 text-black" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="backdrop-blur-lg bg-green-100/40 border border-green-300/30 shadow-md">
+        <Card className="backdrop-blur-lg bg-white/40 hover:bg-white/60 transition-colors duration-200 border border-green-300/30 shadow-md">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -174,7 +175,7 @@ export function PlannedExpensesScreen() {
           </CardContent>
         </Card>
 
-        <Card className="backdrop-blur-lg bg-orange-100/40 border border-orange-300/30 shadow-md">
+        <Card className="backdrop-blur-lg bg-white/40 hover:bg-white/60 transition-colors duration-200 border border-orange-300/30 shadow-md">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -212,7 +213,7 @@ export function PlannedExpensesScreen() {
       </div>
 
       {/* Expenses List */}
-      <Card className="backdrop-blur-lg bg-white/40 border border-white/30 shadow-lg">
+      <Card className="backdrop-blur-lg bg-white/40  hover:bg-white/60 transition-colors duration-200 border border-white/30 shadow-lg">
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <span>Liste des budgets ({plannedExpenses.length})</span>

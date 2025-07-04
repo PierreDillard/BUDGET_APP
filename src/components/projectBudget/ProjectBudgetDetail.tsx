@@ -184,7 +184,7 @@ export const ProjectBudgetDetail: React.FC<ProjectBudgetDetailProps> = ({
 
   if (!budget) {
     return (
-      <div className="text-center p-4">
+      <div className="text-center p-4 text-black">
         <p className="text-gray-600 mb-4">Budget projet non trouvé</p>
         <Button onClick={onBack} variant="outline">
           <ArrowLeft className="h-4 w-4 mr-2" />
@@ -202,12 +202,12 @@ export const ProjectBudgetDetail: React.FC<ProjectBudgetDetailProps> = ({
   return (
     <div className={`space-y-6 ${className}`}>
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between text-black">
         <Button variant="ghost" onClick={onBack} className="flex items-center gap-2">
           <ArrowLeft className="h-4 w-4" />
           Retour à la liste
         </Button>
-        <div className="flex gap-2">
+        <div className="flex gap-2 text-black">
           {!isCompleted && (
             <>
               {isPaused ? (

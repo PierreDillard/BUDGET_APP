@@ -68,6 +68,8 @@ model users {
   rec_incomes      rec_incomes[]
   refresh_tokens   refresh_tokens[]
   balance_adjustments balance_adjustments[]
+  project_budgets  project_budgets[]
+  budget_contributions budget_contributions[]
 }
 
 model balance_adjustments {
@@ -115,4 +117,49 @@ enum PlannedExpenseCategory {
   EDUCATION
   GIFT
   OTHER
+}
+
+model project_budgets {
+  id               String                 @id @default(uuid())
+  user_id          String
+  name             String
+  description      String?
+  target_amount    Float
+  current_amount   Float                  @default(0)
+  category         ProjectBudgetCategory  @default(OTHER)
+  target_date      DateTime?
+  status           ProjectBudgetStatus    @default(ACTIVE)
+  created_at       DateTime               @default(now())
+  updated_at       DateTime               @updatedAt
+  users            users                  @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  contributions    budget_contributions[]
+}
+
+model budget_contributions {
+  id               String          @id @default(uuid())
+  project_budget_id String
+  user_id          String
+  amount           Float
+  description      String?
+  created_at       DateTime        @default(now())
+  project_budget   project_budgets @relation(fields: [project_budget_id], references: [id], onDelete: Cascade)
+  users            users           @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+enum ProjectBudgetCategory {
+  ELECTRONICS
+  TRAVEL
+  HOME_IMPROVEMENT
+  VEHICLE
+  EDUCATION
+  EMERGENCY_FUND
+  INVESTMENT
+  OTHER
+}
+
+enum ProjectBudgetStatus {
+  ACTIVE
+  COMPLETED
+  PAUSED
+  CANCELLED
 }

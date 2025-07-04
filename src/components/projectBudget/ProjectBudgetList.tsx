@@ -124,23 +124,23 @@ export const ProjectBudgetList: React.FC<ProjectBudgetListProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Total Projets</CardTitle>
+              <CardTitle className="text-sm font-medium bg-white/40 hover:bg-white/60 transition-colors duration-200 ">Total Projets</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{projectBudgetStats.totalBudgets}</div>
+              <div className="text-2xl font-bold bg-white/40 hover:bg-white/60 transition-colors duration-200 ">{projectBudgetStats.totalBudgets}</div>
+            </CardContent> 
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium bg-white/40 hover:bg-white/60 transition-colors duration-200 ">Montant Total</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold bg-white/40 hover:bg-white/60 transition-colors duration-200 ">{formatCurrency(projectBudgetStats.totalTargetAmount)}</div>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Montant Total</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{formatCurrency(projectBudgetStats.totalTargetAmount)}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Économisé</CardTitle>
+              <CardTitle className="text-sm font-medium bg-white/40 hover:bg-white/60 transition-colors duration-200 ">Économisé</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-600">{formatCurrency(projectBudgetStats.totalCurrentAmount)}</div>
@@ -148,7 +148,7 @@ export const ProjectBudgetList: React.FC<ProjectBudgetListProps> = ({
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Terminés</CardTitle>
+              <CardTitle className="text-sm font-medium bg-white/40 hover:bg-white/60 transition-colors duration-200 ">Terminés</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{projectBudgetStats.completedBudgets}</div>

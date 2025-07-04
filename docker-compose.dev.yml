@@ -1,0 +1,119 @@
+version: '3.8'
+
+services:
+  # Development environment
+  app-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: frontend-builder
+    container_name: budget-app-dev
+    restart: unless-stopped
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./src:/app/src
+      - ./public:/app/public
+      - ./index.html:/app/index.html
+      - ./vite.config.ts:/app/vite.config.ts
+    environment:
+      - NODE_ENV=development
+      - VITE_API_URL=http://localhost:3001
+    depends_on:
+      - backend-dev
+      - postgres
+    command: npm run dev
+    networks:
+      - budget-dev-network
+
+  # Backend development
+  backend-dev:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: base
+    container_name: budget-backend-dev
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./backend/src:/app/src
+      - ./backend/prisma:/app/prisma
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://postgres:password123@postgres:5432/budget_app
+      - JWT_SECRET=development-secret-key
+      - PORT=3001
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: npm run start:dev
+    networks:
+      - budget-dev-network
+
+  # PostgreSQL for development
+  postgres:
+    image: postgres:15-alpine
+    container_name: budget-postgres-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: budget_app
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+      - ./backend/docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d budget_app"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - budget-dev-network
+
+  # Redis for development (optional)
+  redis:
+    image: redis:7-alpine
+    container_name: budget-redis-dev
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_dev_data:/data
+    networks:
+      - budget-dev-network
+
+  # Prisma Studio for database management
+  prisma-studio:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: base
+    container_name: budget-prisma-studio
+    restart: unless-stopped
+    ports:
+      - "5555:5555"
+    volumes:
+      - ./backend/prisma:/app/prisma
+    environment:
+      - DATABASE_URL=postgresql://postgres:password123@postgres:5432/budget_app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: npx prisma studio --port 5555 --hostname 0.0.0.0
+    networks:
+      - budget-dev-network
+    profiles:
+      - studio
+
+volumes:
+  postgres_dev_data:
+    driver: local
+  redis_dev_data:
+    driver: local
+
+networks:
+  budget-dev-network:
+    driver: bridge

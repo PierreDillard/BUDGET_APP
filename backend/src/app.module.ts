@@ -13,6 +13,8 @@ import { IncomesModule } from './incomes/incomes.module';
 import { ExpensesModule } from './expenses/expenses.module';
 import { PlannedExpensesModule } from './planned-expenses/planned-expenses.module';
 import { BalanceModule } from './balance/balance.module';
+import { ProjectBudgetsModule } from './project-budgets/project-budgets.module';
+import { HealthModule } from './health/health.module';
 
 // Controllers
 import { AppController } from './app.controller';
@@ -45,6 +47,8 @@ import { AppService } from './app.service';
     ExpensesModule,
     PlannedExpensesModule,
     BalanceModule,
+    ProjectBudgetsModule,
+    HealthModule,
   ],
   controllers: [AppController],
   providers: [
