@@ -4,37 +4,34 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Euro, Loader2 } from "lucide-react";
+import { Euro, Loader2, Calendar } from "lucide-react";
 import { useBudgetStore } from "@/store/budgetStore";
-import { FREQUENCY_OPTIONS, QUARTERLY_MONTH_OPTIONS, YEARLY_MONTH_OPTIONS, getFrequencyDisplayText } from "@/lib/frequency.utils";
-import type { RecExpense, CreateExpenseRequest, FrequencyType, FrequencyData } from "@/types";
+import { FREQUENCY_OPTIONS, QUARTERLY_MONTH_OPTIONS, YEARLY_MONTH_OPTIONS } from "@/lib/frequency.utils";
+import type { RecIncome, CreateIncomeRequest, FrequencyType, FrequencyData } from "@/types";
 
-interface ExpenseModalProps {
+interface IncomeModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  expense?: RecExpense;
+  income?: RecIncome;
   mode: 'add' | 'edit';
 }
 
 const defaultCategories = [
-  { value: 'rent', label: 'Loyer' },
-  { value: 'utilities', label: 'Charges' },
-  { value: 'insurance', label: 'Assurance' },
-  { value: 'food', label: 'Alimentation' },
-  { value: 'transport', label: 'Transport' },
-  { value: 'health', label: 'Santé' },
-  { value: 'subscription', label: 'Abonnement' },
+  { value: 'salary', label: 'Salaire' },
+  { value: 'freelance', label: 'Freelance' },
+  { value: 'investment', label: 'Investissement' },
+  { value: 'allowance', label: 'Allocation' },
   { value: 'other', label: 'Autre' },
 ];
 
-export function ExpenseModal({ open, onOpenChange, expense, mode }: ExpenseModalProps) {
-  const { addExpense, updateExpense, isLoading, user } = useBudgetStore();
+export function IncomeModal({ open, onOpenChange, income, mode }: IncomeModalProps) {
+  const { addIncome, updateIncome, isLoading, user } = useBudgetStore();
   
-  const [formData, setFormData] = useState<CreateExpenseRequest>({
+  const [formData, setFormData] = useState<CreateIncomeRequest>({
     label: '',
     amount: 0,
     dayOfMonth: 1,
-    category: 'other',
+    category: 'salary',
     frequency: 'MONTHLY',
     frequencyData: undefined,
   });
@@ -42,37 +39,37 @@ export function ExpenseModal({ open, onOpenChange, expense, mode }: ExpenseModal
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Reset form when modal opens/closes or expense changes
+  // Reset form when modal opens/closes or income changes
   useEffect(() => {
     if (open) {
-      if (mode === 'edit' && expense) {
+      if (mode === 'edit' && income) {
         setFormData({
-          label: expense.label,
-          amount: expense.amount,
-          dayOfMonth: expense.dayOfMonth,
-          category: expense.category || 'other',
-          frequency: expense.frequency || 'MONTHLY',
-          frequencyData: expense.frequencyData,
+          label: income.label,
+          amount: income.amount,
+          dayOfMonth: income.dayOfMonth,
+          category: income.category || 'salary',
+          frequency: income.frequency || 'MONTHLY',
+          frequencyData: income.frequencyData,
         });
       } else {
         setFormData({
           label: '',
           amount: 0,
           dayOfMonth: 1,
-          category: 'other',
+          category: 'salary',
           frequency: 'MONTHLY',
           frequencyData: undefined,
         });
       }
       setErrors({});
     }
-  }, [open, mode, expense]);
+  }, [open, mode, income]);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
     if (!formData.label.trim()) {
-      newErrors.label = 'Le nom de la dépense est requis';
+      newErrors.label = 'Le nom du revenu est requis';
     } else if (formData.label.trim().length < 2) {
       newErrors.label = 'Le nom doit contenir au moins 2 caractères';
     }
@@ -89,15 +86,15 @@ export function ExpenseModal({ open, onOpenChange, expense, mode }: ExpenseModal
 
     // Validation spécifique selon la fréquence
     if (formData.frequency === 'ONE_TIME' && !formData.frequencyData?.date) {
-      newErrors.frequencyData = 'La date est requise pour une dépense ponctuelle';
+      newErrors.frequencyData = 'La date est requise pour un revenu ponctuel';
     }
 
     if (formData.frequency === 'QUARTERLY' && (!formData.frequencyData?.months || formData.frequencyData.months.length === 0)) {
-      newErrors.frequencyData = 'Les mois sont requis pour une dépense trimestrielle';
+      newErrors.frequencyData = 'Les mois sont requis pour un revenu trimestriel';
     }
 
     if (formData.frequency === 'YEARLY' && (!formData.frequencyData?.months || formData.frequencyData.months.length === 0)) {
-      newErrors.frequencyData = 'Le mois est requis pour une dépense annuelle';
+      newErrors.frequencyData = 'Le mois est requis pour un revenu annuel';
     }
 
     setErrors(newErrors);
@@ -111,10 +108,10 @@ export function ExpenseModal({ open, onOpenChange, expense, mode }: ExpenseModal
 
     setIsSubmitting(true);
     try {
-      if (mode === 'edit' && expense) {
-        await updateExpense(expense.id, formData);
+      if (mode === 'edit' && income) {
+        await updateIncome(income.id, formData);
       } else {
-        await addExpense(formData);
+        await addIncome(formData);
       }
       onOpenChange(false);
     } catch (error) {
@@ -124,7 +121,7 @@ export function ExpenseModal({ open, onOpenChange, expense, mode }: ExpenseModal
     }
   };
 
-  const handleChange = (field: keyof CreateExpenseRequest, value: string | number) => {
+  const handleChange = (field: keyof CreateIncomeRequest, value: string | number) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     
     // Clear error when user starts typing
@@ -160,22 +157,22 @@ export function ExpenseModal({ open, onOpenChange, expense, mode }: ExpenseModal
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md backdrop-blur-lg bg-white/95 border border-white/20 max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-md backdrop-blur-lg bg-white/95 border border-white/20">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Euro className="h-5 w-5 text-red-600" />
-            {mode === 'edit' ? 'Modifier la dépense' : 'Ajouter une dépense'}
+            <Euro className="h-5 w-5 text-green-600" />
+            {mode === 'edit' ? 'Modifier le revenu' : 'Ajouter un revenu'}
           </DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Nom de la dépense */}
+          {/* Nom du revenu */}
           <div className="space-y-2">
-            <Label htmlFor="label">Nom de la dépense</Label>
+            <Label htmlFor="label">Nom du revenu</Label>
             <Input
               id="label"
               type="text"
-              placeholder="Ex: Loyer, Électricité, ..."
+              placeholder="Ex: Salaire, Freelance, ..."
               value={formData.label}
               onChange={(e) => handleChange('label', e.target.value)}
               className={errors.label ? 'border-red-500' : ''}
@@ -211,6 +208,54 @@ export function ExpenseModal({ open, onOpenChange, expense, mode }: ExpenseModal
             )}
           </div>
 
+          {/* Jour du mois */}
+          <div className="space-y-2">
+            <Label htmlFor="dayOfMonth">Jour de versement</Label>
+            <Select 
+              value={formData.dayOfMonth.toString()} 
+              onValueChange={(value) => handleChange('dayOfMonth', parseInt(value))}
+              disabled={isSubmitting}
+            >
+              <SelectTrigger className={errors.dayOfMonth ? 'border-red-500' : ''}>
+                <SelectValue placeholder="Sélectionner un jour" />
+              </SelectTrigger>
+              <SelectContent>
+                {Array.from({ length: 28 }, (_, i) => i + 1).map((day) => (
+                  <SelectItem key={day} value={day.toString()}>
+                    Le {day} de chaque mois
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {errors.dayOfMonth && (
+              <p className="text-sm text-red-600">{errors.dayOfMonth}</p>
+            )}
+            <p className="text-xs text-gray-500">
+              Jour du mois où ce revenu est versé
+            </p>
+          </div>
+
+          {/* Catégorie */}
+          <div className="space-y-2">
+            <Label htmlFor="category">Catégorie</Label>
+            <Select 
+              value={formData.category} 
+              onValueChange={(value) => handleChange('category', value)}
+              disabled={isSubmitting}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionner une catégorie" />
+              </SelectTrigger>
+              <SelectContent>
+                {defaultCategories.map((category) => (
+                  <SelectItem key={category.value} value={category.value}>
+                    {category.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           {/* Fréquence */}
           <div className="space-y-2">
             <Label htmlFor="frequency">Fréquence</Label>
@@ -235,127 +280,79 @@ export function ExpenseModal({ open, onOpenChange, expense, mode }: ExpenseModal
             )}
           </div>
 
-          {/* Jour du mois ou date spécifique */}
-          {formData.frequency === 'ONE_TIME' ? (
+          {/* Données de fréquence */}
+          {formData.frequency !== 'MONTHLY' && (
             <div className="space-y-2">
-              <Label htmlFor="oneTimeDate">Date de la dépense ponctuelle</Label>
-              <Input
-                id="oneTimeDate"
-                type="date"
-                value={formData.frequencyData?.date || ''}
-                onChange={(e) => handleFrequencyDataChange({ date: e.target.value })}
-                className={errors.frequencyData ? 'border-red-500' : ''}
-                disabled={isSubmitting}
-              />
-              {errors.frequencyData && (
-                <p className="text-sm text-red-600">{errors.frequencyData}</p>
+              <Label htmlFor="frequencyData">Détails de la fréquence</Label>
+              {formData.frequency === 'ONE_TIME' && (
+                <div className="flex flex-col gap-2">
+                  <Input
+                    id="frequencyData"
+                    type="date"
+                    value={formData.frequencyData?.date?.toString() || ''}
+                    onChange={(e) => handleFrequencyDataChange({ date: e.target.valueAsDate })}
+                    className={errors.frequencyData ? 'border-red-500' : ''}
+                    disabled={isSubmitting}
+                  />
+                  {errors.frequencyData && (
+                    <p className="text-sm text-red-600">{errors.frequencyData}</p>
+                  )}
+                </div>
               )}
-            </div>
-          ) : (
-            <div className="space-y-2">
-              <Label htmlFor="dayOfMonth">Jour d'échéance</Label>
-              <Select 
-                value={formData.dayOfMonth.toString()} 
-                onValueChange={(value) => handleChange('dayOfMonth', parseInt(value))}
-                disabled={isSubmitting}
-              >
-                <SelectTrigger className={errors.dayOfMonth ? 'border-red-500' : ''}>
-                  <SelectValue placeholder="Sélectionner un jour" />
-                </SelectTrigger>
-                <SelectContent>
-                  {Array.from({ length: 28 }, (_, i) => i + 1).map((day) => (
-                    <SelectItem key={day} value={day.toString()}>
-                      Le {day}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {errors.dayOfMonth && (
-                <p className="text-sm text-red-600">{errors.dayOfMonth}</p>
+              {formData.frequency === 'QUARTERLY' && (
+                <div className="flex flex-col gap-2">
+                  <Select
+                    value={formData.frequencyData?.months?.[0] || ''}
+                    onValueChange={(value) => handleFrequencyDataChange({ months: [value] })}
+                    disabled={isSubmitting}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sélectionner un mois" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {QUARTERLY_MONTH_OPTIONS.map((month) => (
+                        <SelectItem key={month.value} value={month.value}>
+                          {month.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {errors.frequencyData && (
+                    <p className="text-sm text-red-600">{errors.frequencyData}</p>
+                  )}
+                </div>
               )}
-            </div>
-          )}
-
-          {/* Détails de fréquence trimestrielle */}
-          {formData.frequency === 'QUARTERLY' && (
-            <div className="space-y-2">
-              <Label htmlFor="quarterlyMonths">Mois trimestriels</Label>
-              <Select 
-                value={JSON.stringify(formData.frequencyData?.months || [1, 4, 7, 10])} 
-                onValueChange={(value) => handleFrequencyDataChange({ months: JSON.parse(value) })}
-                disabled={isSubmitting}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner les mois" />
-                </SelectTrigger>
-                <SelectContent>
-                  {QUARTERLY_MONTH_OPTIONS.map((option, index) => (
-                    <SelectItem key={index} value={JSON.stringify(option.value)}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {errors.frequencyData && (
-                <p className="text-sm text-red-600">{errors.frequencyData}</p>
-              )}
-            </div>
-          )}
-
-          {/* Détails de fréquence annuelle */}
-          {formData.frequency === 'YEARLY' && (
-            <div className="space-y-2">
-              <Label htmlFor="yearlyMonth">Mois annuel</Label>
-              <Select 
-                value={formData.frequencyData?.months?.[0]?.toString() || '1'} 
-                onValueChange={(value) => handleFrequencyDataChange({ months: [parseInt(value)] })}
-                disabled={isSubmitting}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner le mois" />
-                </SelectTrigger>
-                <SelectContent>
-                  {YEARLY_MONTH_OPTIONS.map((month) => (
-                    <SelectItem key={month.value} value={month.value.toString()}>
-                      {month.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {errors.frequencyData && (
-                <p className="text-sm text-red-600">{errors.frequencyData}</p>
+              {formData.frequency === 'YEARLY' && (
+                <div className="flex flex-col gap-2">
+                  <Select
+                    value={formData.frequencyData?.months?.[0] || ''}
+                    onValueChange={(value) => handleFrequencyDataChange({ months: [value] })}
+                    disabled={isSubmitting}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sélectionner un mois" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {YEARLY_MONTH_OPTIONS.map((month) => (
+                        <SelectItem key={month.value} value={month.value}>
+                          {month.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {errors.frequencyData && (
+                    <p className="text-sm text-red-600">{errors.frequencyData}</p>
+                  )}
+                </div>
               )}
             </div>
           )}
-
-          {/* Catégorie */}
-          <div className="space-y-2">
-            <Label htmlFor="category">Catégorie</Label>
-            <Select 
-              value={formData.category} 
-              onValueChange={(value) => handleChange('category', value)}
-              disabled={isSubmitting}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Sélectionner une catégorie" />
-              </SelectTrigger>
-              <SelectContent>
-                {defaultCategories.map((category) => (
-                  <SelectItem key={category.value} value={category.value}>
-                    {category.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
 
           {/* Aperçu */}
           {formData.label && formData.amount > 0 && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-sm text-red-800">
-                <strong>Aperçu :</strong> {formData.label} - {formData.amount.toFixed(2)} {currencySymbol}
-                <br />
-                <strong>Fréquence :</strong> {getFrequencyDisplayText(formData.frequency, formData.frequencyData)}
+            <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+              <p className="text-sm text-green-800">
+                <strong>Aperçu :</strong> {formData.label} - {formData.amount.toFixed(2)} {currencySymbol} le {formData.dayOfMonth} de chaque mois
               </p>
             </div>
           )}
@@ -373,7 +370,7 @@ export function ExpenseModal({ open, onOpenChange, expense, mode }: ExpenseModal
             </Button>
             <Button
               type="submit"
-              className="flex-1 bg-red-600 hover:bg-red-700"
+              className="flex-1 bg-green-600 hover:bg-green-700"
               disabled={isSubmitting || isLoading}
             >
               {isSubmitting ? (

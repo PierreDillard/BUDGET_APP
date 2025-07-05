@@ -4,6 +4,7 @@ import { IncomesService } from '../incomes/incomes.service';
 import { ExpensesService } from '../expenses/expenses.service';
 import { PlannedExpensesService } from '../planned-expenses/planned-expenses.service';
 import { BalanceData, ProjectionData, AlertData, BalanceAdjustmentDto, MonthlyResetDto, MonthlyResetStatusDto } from './dto/balance.dto';
+import { calculateMonthlyEquivalent } from '../common/frequency.utils';
 import { startOfMonth, endOfMonth, addDays, format, parseISO, isAfter, isBefore, differenceInDays, addMonths } from 'date-fns';
 
 @Injectable()
@@ -33,9 +34,9 @@ export class BalanceService {
       const adjustments = await this.getBalanceAdjustments(user_id);
       const totalAdjustments = adjustments.reduce((sum, adj) => sum + adj.amount, 0);
 
-      // Calculate totals
-      const totalIncome = await this.incomesService.getTotalIncome(user_id);
-      const totalExpenses = await this.expensesService.getTotalExpenses(user_id);
+      // Calculate totals using frequency-aware methods
+      const totalIncome = await this.calculateMonthlyIncomes(user_id);
+      const totalExpenses = await this.calculateMonthlyExpenses(user_id);
       
       // For planned expenses, only count unspent ones
       const plannedStats = await this.plannedExpensesService.getStatistics(user_id);
@@ -393,6 +394,38 @@ export class BalanceService {
     } catch (error) {
       this.logger.error('Error generating monthly trends:', error);
       throw new Error('Failed to generate monthly trends');
+    }
+  }
+
+  private async calculateMonthlyIncomes(user_id: string): Promise<number> {
+    try {
+      const incomes = await this.prisma.rec_incomes.findMany({
+        where: { user_id },
+      });
+
+      return incomes.reduce((total, income) => {
+        const frequency = (income as any).frequency || 'MONTHLY';
+        return total + calculateMonthlyEquivalent(income.amount, frequency);
+      }, 0);
+    } catch (error) {
+      this.logger.error('Error calculating monthly incomes:', error);
+      return 0;
+    }
+  }
+
+  private async calculateMonthlyExpenses(user_id: string): Promise<number> {
+    try {
+      const expenses = await this.prisma.rec_expenses.findMany({
+        where: { user_id },
+      });
+
+      return expenses.reduce((total, expense) => {
+        const frequency = (expense as any).frequency || 'MONTHLY';
+        return total + calculateMonthlyEquivalent(expense.amount, frequency);
+      }, 0);
+    } catch (error) {
+      this.logger.error('Error calculating monthly expenses:', error);
+      return 0;
     }
   }
 }

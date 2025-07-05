@@ -18,7 +18,9 @@ export class ExpensesService {
           category: createExpenseDto.category || 'other',
           user_id: user_id,
           updated_at: new Date(),
-        },
+          ...(createExpenseDto.frequency && { frequency: createExpenseDto.frequency }),
+          ...(createExpenseDto.frequencyData && { frequency_data: createExpenseDto.frequencyData }),
+        } as any,
       });
 
       this.logger.log(`Expense created: ${expense.label} - ${expense.amount}€`);
@@ -28,6 +30,8 @@ export class ExpensesService {
         amount: expense.amount,
         dayOfMonth: expense.day_of_month,
         category: expense.category,
+        frequency: (expense as any).frequency || 'MONTHLY',
+        frequencyData: (expense as any).frequency_data || null,
         userId: expense.user_id,
       };
     } catch (error) {
@@ -55,6 +59,8 @@ export class ExpensesService {
         amount: expense.amount,
         dayOfMonth: expense.day_of_month,
         category: expense.category,
+        frequency: (expense as any).frequency || 'MONTHLY',
+        frequencyData: (expense as any).frequency_data || null,
         userId: expense.user_id,
       }));
     } catch (error) {
@@ -82,6 +88,8 @@ export class ExpensesService {
         amount: expense.amount,
         dayOfMonth: expense.day_of_month,
         category: expense.category,
+        frequency: (expense as any).frequency || 'MONTHLY',
+        frequencyData: (expense as any).frequency_data || null,
         userId: expense.user_id,
       };
     } catch (error) {
@@ -104,8 +112,10 @@ export class ExpensesService {
           ...(updateExpenseDto.amount !== undefined && { amount: updateExpenseDto.amount }),
           ...(updateExpenseDto.dayOfMonth !== undefined && { day_of_month: updateExpenseDto.dayOfMonth }),
           ...(updateExpenseDto.category !== undefined && { category: updateExpenseDto.category }),
+          ...(updateExpenseDto.frequency !== undefined && { frequency: updateExpenseDto.frequency }),
+          ...(updateExpenseDto.frequencyData !== undefined && { frequency_data: updateExpenseDto.frequencyData }),
           updated_at: new Date(),
-        },
+        } as any,
       });
 
       this.logger.log(`Expense updated: ${updatedExpense.label} - ${updatedExpense.amount}€`);
@@ -115,6 +125,8 @@ export class ExpensesService {
         amount: updatedExpense.amount,
         dayOfMonth: updatedExpense.day_of_month,
         category: updatedExpense.category,
+        frequency: (updatedExpense as any).frequency || 'MONTHLY',
+        frequencyData: (updatedExpense as any).frequency_data || null,
         userId: updatedExpense.user_id,
       };
     } catch (error) {

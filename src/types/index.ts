@@ -16,6 +16,8 @@ export interface RecIncome {
   amount: number;
   dayOfMonth: number;
   category?: string;
+  frequency: FrequencyType;
+  frequencyData?: FrequencyData;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -27,6 +29,8 @@ export interface RecExpense {
   amount: number;
   dayOfMonth: number;
   category?: string;
+  frequency: FrequencyType;
+  frequencyData?: FrequencyData;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -77,12 +81,25 @@ export interface Alert {
 
 export type Currency = 'EUR' | 'USD' | 'GBP';
 
+// Frequency types
+export type FrequencyType = 'ONE_TIME' | 'MONTHLY' | 'QUARTERLY' | 'YEARLY';
+
+export interface FrequencyData {
+  // For quarterly: which months (1-12)
+  // For yearly: which month (1-12)
+  // For one-time: specific date
+  months?: number[];
+  date?: string;
+}
+
 // Request types for API calls
 export interface CreateIncomeRequest {
   label: string;
   amount: number;
   dayOfMonth: number;
   category?: string;
+  frequency: FrequencyType;
+  frequencyData?: FrequencyData;
 }
 
 export interface CreateExpenseRequest {
@@ -90,6 +107,8 @@ export interface CreateExpenseRequest {
   amount: number;
   dayOfMonth: number;
   category?: string;
+  frequency: FrequencyType;
+  frequencyData?: FrequencyData;
 }
 
 export interface CreatePlannedExpenseRequest {

@@ -4,10 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Euro, Loader2 } from "lucide-react";
+import { CreditCard, Loader2 } from "lucide-react";
 import { useBudgetStore } from "@/store/budgetStore";
-import { FREQUENCY_OPTIONS, QUARTERLY_MONTH_OPTIONS, YEARLY_MONTH_OPTIONS, getFrequencyDisplayText } from "@/lib/frequency.utils";
-import type { RecExpense, CreateExpenseRequest, FrequencyType, FrequencyData } from "@/types";
+import type { RecExpense, CreateExpenseRequest } from "@/types";
 
 interface ExpenseModalProps {
   open: boolean;
@@ -18,12 +17,12 @@ interface ExpenseModalProps {
 
 const defaultCategories = [
   { value: 'rent', label: 'Loyer' },
-  { value: 'utilities', label: 'Charges' },
+  { value: 'utilities', label: 'Factures' },
   { value: 'insurance', label: 'Assurance' },
   { value: 'food', label: 'Alimentation' },
   { value: 'transport', label: 'Transport' },
   { value: 'health', label: 'Santé' },
-  { value: 'subscription', label: 'Abonnement' },
+  { value: 'subscription', label: 'Abonnements' },
   { value: 'other', label: 'Autre' },
 ];
 
@@ -35,8 +34,6 @@ export function ExpenseModal({ open, onOpenChange, expense, mode }: ExpenseModal
     amount: 0,
     dayOfMonth: 1,
     category: 'other',
-    frequency: 'MONTHLY',
-    frequencyData: undefined,
   });
   
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -51,8 +48,6 @@ export function ExpenseModal({ open, onOpenChange, expense, mode }: ExpenseModal
           amount: expense.amount,
           dayOfMonth: expense.dayOfMonth,
           category: expense.category || 'other',
-          frequency: expense.frequency || 'MONTHLY',
-          frequencyData: expense.frequencyData,
         });
       } else {
         setFormData({
@@ -60,8 +55,6 @@ export function ExpenseModal({ open, onOpenChange, expense, mode }: ExpenseModal
           amount: 0,
           dayOfMonth: 1,
           category: 'other',
-          frequency: 'MONTHLY',
-          frequencyData: undefined,
         });
       }
       setErrors({});
@@ -79,25 +72,12 @@ export function ExpenseModal({ open, onOpenChange, expense, mode }: ExpenseModal
 
     if (!formData.amount || formData.amount <= 0) {
       newErrors.amount = 'Le montant doit être supérieur à 0';
-    } else if (formData.amount > 1000000) {
-      newErrors.amount = 'Le montant ne peut pas dépasser 1 000 000';
+    } else if (formData.amount > 100000) {
+      newErrors.amount = 'Le montant ne peut pas dépasser 100 000';
     }
 
     if (formData.dayOfMonth < 1 || formData.dayOfMonth > 28) {
       newErrors.dayOfMonth = 'Le jour doit être entre 1 et 28';
-    }
-
-    // Validation spécifique selon la fréquence
-    if (formData.frequency === 'ONE_TIME' && !formData.frequencyData?.date) {
-      newErrors.frequencyData = 'La date est requise pour une dépense ponctuelle';
-    }
-
-    if (formData.frequency === 'QUARTERLY' && (!formData.frequencyData?.months || formData.frequencyData.months.length === 0)) {
-      newErrors.frequencyData = 'Les mois sont requis pour une dépense trimestrielle';
-    }
-
-    if (formData.frequency === 'YEARLY' && (!formData.frequencyData?.months || formData.frequencyData.months.length === 0)) {
-      newErrors.frequencyData = 'Le mois est requis pour une dépense annuelle';
     }
 
     setErrors(newErrors);
@@ -133,37 +113,14 @@ export function ExpenseModal({ open, onOpenChange, expense, mode }: ExpenseModal
     }
   };
 
-  const handleFrequencyChange = (frequency: FrequencyType) => {
-    setFormData(prev => ({
-      ...prev,
-      frequency,
-      frequencyData: frequency === 'MONTHLY' ? undefined : prev.frequencyData
-    }));
-    
-    if (errors.frequency || errors.frequencyData) {
-      setErrors(prev => ({ ...prev, frequency: '', frequencyData: '' }));
-    }
-  };
-
-  const handleFrequencyDataChange = (data: Partial<FrequencyData>) => {
-    setFormData(prev => ({
-      ...prev,
-      frequencyData: { ...prev.frequencyData, ...data }
-    }));
-    
-    if (errors.frequencyData) {
-      setErrors(prev => ({ ...prev, frequencyData: '' }));
-    }
-  };
-
   const currencySymbol = user?.currency === 'USD' ? '$' : user?.currency === 'GBP' ? '£' : '€';
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md backdrop-blur-lg bg-white/95 border border-white/20 max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-md backdrop-blur-lg bg-white/95 border border-white/20">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Euro className="h-5 w-5 text-red-600" />
+            <CreditCard className="h-5 w-5 text-red-600" />
             {mode === 'edit' ? 'Modifier la dépense' : 'Ajouter une dépense'}
           </DialogTitle>
         </DialogHeader>
@@ -175,7 +132,7 @@ export function ExpenseModal({ open, onOpenChange, expense, mode }: ExpenseModal
             <Input
               id="label"
               type="text"
-              placeholder="Ex: Loyer, Électricité, ..."
+              placeholder="Ex: Loyer, Électricité, Assurance..."
               value={formData.label}
               onChange={(e) => handleChange('label', e.target.value)}
               className={errors.label ? 'border-red-500' : ''}
@@ -195,7 +152,7 @@ export function ExpenseModal({ open, onOpenChange, expense, mode }: ExpenseModal
                 type="number"
                 step="0.01"
                 min="0.01"
-                max="1000000"
+                max="100000"
                 placeholder="0.00"
                 value={formData.amount || ''}
                 onChange={(e) => handleChange('amount', parseFloat(e.target.value) || 0)}
@@ -211,122 +168,32 @@ export function ExpenseModal({ open, onOpenChange, expense, mode }: ExpenseModal
             )}
           </div>
 
-          {/* Fréquence */}
+          {/* Jour du mois */}
           <div className="space-y-2">
-            <Label htmlFor="frequency">Fréquence</Label>
+            <Label htmlFor="dayOfMonth">Jour d'échéance</Label>
             <Select 
-              value={formData.frequency} 
-              onValueChange={handleFrequencyChange}
+              value={formData.dayOfMonth.toString()} 
+              onValueChange={(value) => handleChange('dayOfMonth', parseInt(value))}
               disabled={isSubmitting}
             >
-              <SelectTrigger>
-                <SelectValue placeholder="Sélectionner une fréquence" />
+              <SelectTrigger className={errors.dayOfMonth ? 'border-red-500' : ''}>
+                <SelectValue placeholder="Sélectionner un jour" />
               </SelectTrigger>
               <SelectContent>
-                {FREQUENCY_OPTIONS.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
+                {Array.from({ length: 28 }, (_, i) => i + 1).map((day) => (
+                  <SelectItem key={day} value={day.toString()}>
+                    Le {day} de chaque mois
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            {errors.frequency && (
-              <p className="text-sm text-red-600">{errors.frequency}</p>
+            {errors.dayOfMonth && (
+              <p className="text-sm text-red-600">{errors.dayOfMonth}</p>
             )}
+            <p className="text-xs text-gray-500">
+              Jour du mois où cette dépense doit être payée
+            </p>
           </div>
-
-          {/* Jour du mois ou date spécifique */}
-          {formData.frequency === 'ONE_TIME' ? (
-            <div className="space-y-2">
-              <Label htmlFor="oneTimeDate">Date de la dépense ponctuelle</Label>
-              <Input
-                id="oneTimeDate"
-                type="date"
-                value={formData.frequencyData?.date || ''}
-                onChange={(e) => handleFrequencyDataChange({ date: e.target.value })}
-                className={errors.frequencyData ? 'border-red-500' : ''}
-                disabled={isSubmitting}
-              />
-              {errors.frequencyData && (
-                <p className="text-sm text-red-600">{errors.frequencyData}</p>
-              )}
-            </div>
-          ) : (
-            <div className="space-y-2">
-              <Label htmlFor="dayOfMonth">Jour d'échéance</Label>
-              <Select 
-                value={formData.dayOfMonth.toString()} 
-                onValueChange={(value) => handleChange('dayOfMonth', parseInt(value))}
-                disabled={isSubmitting}
-              >
-                <SelectTrigger className={errors.dayOfMonth ? 'border-red-500' : ''}>
-                  <SelectValue placeholder="Sélectionner un jour" />
-                </SelectTrigger>
-                <SelectContent>
-                  {Array.from({ length: 28 }, (_, i) => i + 1).map((day) => (
-                    <SelectItem key={day} value={day.toString()}>
-                      Le {day}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {errors.dayOfMonth && (
-                <p className="text-sm text-red-600">{errors.dayOfMonth}</p>
-              )}
-            </div>
-          )}
-
-          {/* Détails de fréquence trimestrielle */}
-          {formData.frequency === 'QUARTERLY' && (
-            <div className="space-y-2">
-              <Label htmlFor="quarterlyMonths">Mois trimestriels</Label>
-              <Select 
-                value={JSON.stringify(formData.frequencyData?.months || [1, 4, 7, 10])} 
-                onValueChange={(value) => handleFrequencyDataChange({ months: JSON.parse(value) })}
-                disabled={isSubmitting}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner les mois" />
-                </SelectTrigger>
-                <SelectContent>
-                  {QUARTERLY_MONTH_OPTIONS.map((option, index) => (
-                    <SelectItem key={index} value={JSON.stringify(option.value)}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {errors.frequencyData && (
-                <p className="text-sm text-red-600">{errors.frequencyData}</p>
-              )}
-            </div>
-          )}
-
-          {/* Détails de fréquence annuelle */}
-          {formData.frequency === 'YEARLY' && (
-            <div className="space-y-2">
-              <Label htmlFor="yearlyMonth">Mois annuel</Label>
-              <Select 
-                value={formData.frequencyData?.months?.[0]?.toString() || '1'} 
-                onValueChange={(value) => handleFrequencyDataChange({ months: [parseInt(value)] })}
-                disabled={isSubmitting}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner le mois" />
-                </SelectTrigger>
-                <SelectContent>
-                  {YEARLY_MONTH_OPTIONS.map((month) => (
-                    <SelectItem key={month.value} value={month.value.toString()}>
-                      {month.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {errors.frequencyData && (
-                <p className="text-sm text-red-600">{errors.frequencyData}</p>
-              )}
-            </div>
-          )}
 
           {/* Catégorie */}
           <div className="space-y-2">
@@ -353,9 +220,7 @@ export function ExpenseModal({ open, onOpenChange, expense, mode }: ExpenseModal
           {formData.label && formData.amount > 0 && (
             <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
               <p className="text-sm text-red-800">
-                <strong>Aperçu :</strong> {formData.label} - {formData.amount.toFixed(2)} {currencySymbol}
-                <br />
-                <strong>Fréquence :</strong> {getFrequencyDisplayText(formData.frequency, formData.frequencyData)}
+                <strong>Aperçu :</strong> {formData.label} - {formData.amount.toFixed(2)} {currencySymbol} le {formData.dayOfMonth} de chaque mois
               </p>
             </div>
           )}

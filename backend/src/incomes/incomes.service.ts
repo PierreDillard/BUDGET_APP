@@ -16,9 +16,11 @@ export class IncomesService {
           amount: createIncomeDto.amount,
           day_of_month: createIncomeDto.dayOfMonth,
           category: createIncomeDto.category || 'salary',
+          frequency: createIncomeDto.frequency || 'MONTHLY',
+          frequency_data: createIncomeDto.frequencyData ? JSON.stringify(createIncomeDto.frequencyData) : null,
           user_id: user_id,
           updated_at: new Date(),
-        },
+        } as any,
       });
 
       this.logger.log(`Income created: ${income.label} for user ${user_id}`);
@@ -28,6 +30,8 @@ export class IncomesService {
         amount: income.amount,
         dayOfMonth: income.day_of_month,
         category: income.category,
+        frequency: income.frequency as string,
+        frequencyData: income.frequency_data as any,
         userId: income.user_id,
       };
     } catch (error) {
@@ -52,6 +56,8 @@ export class IncomesService {
         amount: income.amount,
         dayOfMonth: income.day_of_month,
         category: income.category,
+        frequency: (income as any).frequency,
+        frequencyData: (income as any).frequency_data,
         userId: income.user_id,
       }));
     } catch (error) {
@@ -79,6 +85,8 @@ export class IncomesService {
         amount: income.amount,
         dayOfMonth: income.day_of_month,
         category: income.category,
+        frequency: (income as any).frequency,
+        frequencyData: (income as any).frequency_data,
         userId: income.user_id,
       };
     } catch (error) {
@@ -102,8 +110,10 @@ export class IncomesService {
           ...(updateIncomeDto.amount !== undefined && { amount: updateIncomeDto.amount }),
           ...(updateIncomeDto.dayOfMonth !== undefined && { day_of_month: updateIncomeDto.dayOfMonth }),
           ...(updateIncomeDto.category !== undefined && { category: updateIncomeDto.category }),
+          ...(updateIncomeDto.frequency !== undefined && { frequency: updateIncomeDto.frequency }),
+          ...(updateIncomeDto.frequencyData !== undefined && { frequency_data: JSON.stringify(updateIncomeDto.frequencyData) }),
           updated_at: new Date(),
-        },
+        } as any,
       });
 
       this.logger.log(`Income updated: ${updatedIncome.label} for user ${user_id}`);
@@ -113,6 +123,8 @@ export class IncomesService {
         amount: updatedIncome.amount,
         dayOfMonth: updatedIncome.day_of_month,
         category: updatedIncome.category,
+        frequency: (updatedIncome as any).frequency,
+        frequencyData: (updatedIncome as any).frequency_data,
         userId: updatedIncome.user_id,
       };
     } catch (error) {

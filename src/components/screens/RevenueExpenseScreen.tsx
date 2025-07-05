@@ -6,6 +6,7 @@ import { Plus, Edit, Trash2, Calendar, Euro, Loader2 } from "lucide-react";
 import { useBudgetStore } from "@/store/budgetStore";
 import { IncomeModal } from "@/components/modals/IncomeModal";
 import { ExpenseModal } from "@/components/modals/ExpenseModal";
+import { calculateMonthlyEquivalent, getFrequencyDisplayText } from "@/lib/frequency.utils";
 import type { RecIncome, RecExpense } from "@/types";
 
 export function RevenueExpenseScreen() {
@@ -80,8 +81,12 @@ export function RevenueExpenseScreen() {
     return `Le ${day} de chaque mois`;
   };
 
-  const totalIncomes = incomes.reduce((sum, income) => sum + income.amount, 0);
-  const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
+  const totalIncomes = incomes.reduce((sum, income) => 
+    sum + calculateMonthlyEquivalent(income.amount, income.frequency || 'MONTHLY'), 0
+  );
+  const totalExpenses = expenses.reduce((sum, expense) => 
+    sum + calculateMonthlyEquivalent(expense.amount, expense.frequency || 'MONTHLY'), 0
+  );
 
   if (isLoading && incomes.length === 0 && expenses.length === 0) {
     return (
@@ -232,7 +237,13 @@ export function RevenueExpenseScreen() {
                           </span>
                           <span className="flex items-center gap-1">
                             <Calendar className="h-3 w-3" />
-                            {formatDay(income.dayOfMonth)}
+                            {income.frequency === 'ONE_TIME' 
+                              ? getFrequencyDisplayText(income.frequency, income.frequencyData)
+                              : formatDay(income.dayOfMonth)
+                            }
+                          </span>
+                          <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                            {getFrequencyDisplayText(income.frequency || 'MONTHLY', income.frequencyData)}
                           </span>
                           {income.category && (
                             <span className="text-xs bg-gray-200 px-2 py-1 rounded">
@@ -321,7 +332,13 @@ export function RevenueExpenseScreen() {
                           </span>
                           <span className="flex items-center gap-1">
                             <Calendar className="h-3 w-3" />
-                            {formatDay(expense.dayOfMonth)}
+                            {expense.frequency === 'ONE_TIME' 
+                              ? getFrequencyDisplayText(expense.frequency, expense.frequencyData)
+                              : formatDay(expense.dayOfMonth)
+                            }
+                          </span>
+                          <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded">
+                            {getFrequencyDisplayText(expense.frequency || 'MONTHLY', expense.frequencyData)}
                           </span>
                           {expense.category && (
                             <span className="text-xs bg-gray-200 px-2 py-1 rounded">

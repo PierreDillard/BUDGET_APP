@@ -21,27 +21,31 @@ model planned_expenses {
 }
 
 model rec_expenses {
-  id           String   @id @default(uuid())
+  id           String            @id @default(uuid())
   user_id      String
   label        String
   amount       Float
   day_of_month Int
-  category     String   @default("other")
-  created_at   DateTime @default(now())
-  updated_at   DateTime @updatedAt
-  users        users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  category     String            @default("other")
+  frequency    FrequencyType     @default(MONTHLY)
+  frequency_data Json?           // For additional frequency data (e.g., months for quarterly/annual)
+  created_at   DateTime          @default(now())
+  updated_at   DateTime          @updatedAt
+  users        users             @relation(fields: [user_id], references: [id], onDelete: Cascade)
 }
 
 model rec_incomes {
-  id           String   @id @default(uuid())
+  id           String            @id @default(uuid())
   user_id      String
   label        String
   amount       Float
   day_of_month Int
-  category     String   @default("salary")
-  created_at   DateTime @default(now())
-  updated_at   DateTime @updatedAt
-  users        users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  category     String            @default("salary")
+  frequency    FrequencyType     @default(MONTHLY)
+  frequency_data Json?           // For additional frequency data (e.g., months for quarterly/annual)
+  created_at   DateTime          @default(now())
+  updated_at   DateTime          @updatedAt
+  users        users             @relation(fields: [user_id], references: [id], onDelete: Cascade)
 }
 
 model refresh_tokens {
@@ -162,4 +166,11 @@ enum ProjectBudgetStatus {
   COMPLETED
   PAUSED
   CANCELLED
+}
+
+enum FrequencyType {
+  ONE_TIME
+  MONTHLY
+  QUARTERLY
+  YEARLY
 }
