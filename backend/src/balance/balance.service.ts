@@ -4,7 +4,7 @@ import { IncomesService } from '../incomes/incomes.service';
 import { ExpensesService } from '../expenses/expenses.service';
 import { PlannedExpensesService } from '../planned-expenses/planned-expenses.service';
 import { BalanceData, ProjectionData, AlertData, BalanceAdjustmentDto, MonthlyResetDto, MonthlyResetStatusDto } from './dto/balance.dto';
-import { calculateMonthlyEquivalent } from '../common/frequency.utils';
+import { calculateMonthlyEquivalent, isDueInMonth, FrequencyType } from '../common/frequency.utils';
 import { startOfMonth, endOfMonth, addDays, format, parseISO, isAfter, isBefore, differenceInDays, addMonths } from 'date-fns';
 
 @Injectable()
@@ -299,18 +299,78 @@ export class BalanceService {
           plannedExpenses: [] as Array<{ label: string; amount: number }>,
         };
 
-        // Check for recurring incomes on this day
-        const dayIncomes = incomes.filter(income => income.dayOfMonth === dayOfMonth);
-        for (const income of dayIncomes) {
-          runningBalance += income.amount;
-          events.incomes.push({ label: income.label, amount: income.amount });
+        // Check for incomes on this day (with frequency support)
+        for (const income of incomes) {
+          const frequency = income.frequency || FrequencyType.MONTHLY;
+          const frequencyData = typeof income.frequencyData === 'string' 
+            ? JSON.parse(income.frequencyData) 
+            : income.frequencyData;
+
+          let shouldInclude = false;
+
+          switch (frequency) {
+            case FrequencyType.ONE_TIME:
+              // For one-time income, check exact date
+              if (frequencyData?.date) {
+                const oneTimeDate = new Date(frequencyData.date);
+                shouldInclude = oneTimeDate.toDateString() === projectionDate.toDateString();
+              }
+              break;
+            
+            case FrequencyType.MONTHLY:
+              // For monthly income, check day of month
+              shouldInclude = income.dayOfMonth === dayOfMonth;
+              break;
+            
+            case FrequencyType.QUARTERLY:
+            case FrequencyType.YEARLY:
+              // For quarterly/yearly, check if this month/day is due
+              shouldInclude = income.dayOfMonth === dayOfMonth && 
+                isDueInMonth(frequency, frequencyData, dayOfMonth, projectionDate.getMonth() + 1, projectionDate.getFullYear());
+              break;
+          }
+
+          if (shouldInclude) {
+            runningBalance += income.amount;
+            events.incomes.push({ label: income.label, amount: income.amount });
+          }
         }
 
-        // Check for recurring expenses on this day
-        const dayExpenses = expenses.filter(expense => expense.dayOfMonth === dayOfMonth);
-        for (const expense of dayExpenses) {
-          runningBalance -= expense.amount;
-          events.expenses.push({ label: expense.label, amount: expense.amount });
+        // Check for expenses on this day (with frequency support)
+        for (const expense of expenses) {
+          const frequency = expense.frequency || FrequencyType.MONTHLY;
+          const frequencyData = typeof expense.frequencyData === 'string' 
+            ? JSON.parse(expense.frequencyData) 
+            : expense.frequencyData;
+
+          let shouldInclude = false;
+
+          switch (frequency) {
+            case FrequencyType.ONE_TIME:
+              // For one-time expense, check exact date
+              if (frequencyData?.date) {
+                const oneTimeDate = new Date(frequencyData.date);
+                shouldInclude = oneTimeDate.toDateString() === projectionDate.toDateString();
+              }
+              break;
+            
+            case FrequencyType.MONTHLY:
+              // For monthly expense, check day of month
+              shouldInclude = expense.dayOfMonth === dayOfMonth;
+              break;
+            
+            case FrequencyType.QUARTERLY:
+            case FrequencyType.YEARLY:
+              // For quarterly/yearly, check if this month/day is due
+              shouldInclude = expense.dayOfMonth === dayOfMonth && 
+                isDueInMonth(frequency, frequencyData, dayOfMonth, projectionDate.getMonth() + 1, projectionDate.getFullYear());
+              break;
+          }
+
+          if (shouldInclude) {
+            runningBalance -= expense.amount;
+            events.expenses.push({ label: expense.label, amount: expense.amount });
+          }
         }
 
         // Check for planned expenses on this day
