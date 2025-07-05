@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { Plus, AlertTriangle, Settings, LogOut, Calculator, RefreshCw } from "lucide-react";
+import { Plus, AlertTriangle, Settings, LogOut, Calculator, RefreshCw, BarChart3, TrendingUp, Wallet, Target, Clock, User } from "lucide-react";
 import { useBudgetStore } from "@/store/budgetStore";
 import { RevenueExpenseScreen } from "@/components/screens/RevenueExpenseScreen";
 import { PlannedExpensesScreen } from "@/components/screens/PlannedExpensesScreen";
@@ -114,63 +114,109 @@ export default function BudgetApp() {
   return (
    
       <div className="min-h-screen bg-slate-900 text-white flex">
-      {/* Sidebar for Desktop */}
-      <aside className="hidden md:flex flex-col w-80 bg-slate-800 shadow-2xl ">
-        {/* User Info */}
-        <div className="p-6 border-b border-slate-700">
-          <p className="text-sm font-medium text-slate-300">{user?.email}</p>
-          <p className="text-xs text-slate-400">Devise: {user?.currency}</p>
+      {/* Sidebar for Desktop - Minimal Design like the mockup */}
+      <aside className="hidden md:flex flex-col w-20 bg-slate-800 shadow-2xl">
+        {/* Logo/Icon at top */}
+        <div className="flex items-center justify-center p-6 border-b border-slate-700">
+          <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center">
+            <BarChart3 className="h-5 w-5 text-white" />
+          </div>
         </div>
 
-
-        <nav className="flex flex-col gap-2 flex-1">
+        {/* Navigation Icons */}
+        <nav className="flex flex-col gap-4 flex-1 py-6">
           <Button 
             variant="ghost" 
-            className={currentTab === 'dashboard' ? 'bg-white/40' : ''}
+            size="icon"
+            className={`mx-3 h-12 w-12 rounded-xl transition-all duration-200 ${
+              currentTab === 'dashboard' 
+                ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/25' 
+                : 'text-slate-400 hover:text-white hover:bg-slate-700'
+            }`}
             onClick={() => setCurrentTab('dashboard')}
+            title="Dashboard"
           >
-            Dashboard
+            <BarChart3 className="h-5 w-5" />
           </Button>
+          
           <Button 
             variant="ghost"
-            className={currentTab === 'revenus' ? 'bg-white/40' : ''}
+            size="icon"
+            className={`mx-3 h-12 w-12 rounded-xl transition-all duration-200 ${
+              currentTab === 'revenus' 
+                ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/25' 
+                : 'text-slate-400 hover:text-white hover:bg-slate-700'
+            }`}
             onClick={() => setCurrentTab('revenus')}
+            title="Revenus/Dépenses"
           >
-            Revenus/Dépenses
+            <TrendingUp className="h-5 w-5" />
           </Button>
+          
           <Button 
             variant="ghost"
-            className={currentTab === 'budgets' ? 'bg-white/40' : ''}
+            size="icon"
+            className={`mx-3 h-12 w-12 rounded-xl transition-all duration-200 ${
+              currentTab === 'budgets' 
+                ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/25' 
+                : 'text-slate-400 hover:text-white hover:bg-slate-700'
+            }`}
             onClick={() => setCurrentTab('budgets')}
+            title="Budgets ponctuels"
           >
-            Budgets ponctuels
+            <Wallet className="h-5 w-5" />
           </Button>
+          
           <Button 
             variant="ghost"
-            className={currentTab === 'project-budgets' ? 'bg-white/40' : ''}
+            size="icon"
+            className={`mx-3 h-12 w-12 rounded-xl transition-all duration-200 ${
+              currentTab === 'project-budgets' 
+                ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/25' 
+                : 'text-slate-400 hover:text-white hover:bg-slate-700'
+            }`}
             onClick={() => setCurrentTab('project-budgets')}
+            title="Budgets projets"
           >
-            Budgets projets
+            <Target className="h-5 w-5" />
           </Button>
+          
           <Button 
             variant="ghost"
-            className={currentTab === 'settings' ? 'bg-white/40' : ''}
+            size="icon"
+            className={`mx-3 h-12 w-12 rounded-xl transition-all duration-200 ${
+              currentTab === 'settings' 
+                ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/25' 
+                : 'text-slate-400 hover:text-white hover:bg-slate-700'
+            }`}
             onClick={() => setCurrentTab('settings')}
+            title="Paramètres"
           >
-            <Settings className="h-4 w-4 mr-2" />
-            Paramètres
+            <Settings className="h-5 w-5" />
           </Button>
         </nav>
 
-        {/* Logout Button */}
-        <Button 
-          variant="outline" 
-          onClick={handleLogout}
-          className="mt-4 flex items-center gap-2"
-        >
-          <LogOut className="h-4 w-4" />
-          Déconnexion
-        </Button>
+        {/* User Profile & Logout at bottom */}
+        <div className="border-t border-slate-700 py-4">
+          <Button 
+            variant="ghost"
+            size="icon"
+            className="mx-3 h-12 w-12 rounded-xl text-slate-400 hover:text-white hover:bg-slate-700 mb-2"
+            title={`${user?.email} (${user?.currency})`}
+          >
+            <User className="h-5 w-5" />
+          </Button>
+          
+          <Button 
+            variant="ghost"
+            size="icon"
+            onClick={handleLogout}
+            className="mx-3 h-12 w-12 rounded-xl text-slate-400 hover:text-red-400 hover:bg-red-500/10"
+            title="Déconnexion"
+          >
+            <LogOut className="h-5 w-5" />
+          </Button>
+        </div>
       </aside>
 
       {/* Main Content */}
