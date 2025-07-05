@@ -3,7 +3,7 @@ import { BaseApiService } from './baseApiService';
 
 export class UserService extends BaseApiService {
   async updateUserProfile(updates: Partial<User>): Promise<User> {
-    return this.request<User>('/users/profile', {
+    return this.request<User>('/users/me', {
       method: 'PATCH',
       body: JSON.stringify(updates),
     });
