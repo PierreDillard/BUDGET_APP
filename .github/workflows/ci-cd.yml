@@ -1,0 +1,40 @@
+name: 🚀 Budget App Simple CI/CD
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  # =================================
+  # BUILD & DEPLOY
+  # =================================
+  deploy:
+    name: 🚀 Build & Deploy
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        
+      - name: 🏗️ Build and deploy
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.PRODUCTION_HOST }}
+          username: ${{ secrets.PRODUCTION_USER }}
+          key: ${{ secrets.PRODUCTION_SSH_KEY }}
+          script: |
+            cd /app/budget-app
+            
+            # Pull latest changes
+            git pull origin main
+            
+            # Make a quick database backup
+            docker compose -f docker-compose.prod.yml exec -T postgres pg_dump -U postgres budget_app > "backup-$(date +%Y%m%d-%H%M%S).sql"
+            
+            # Rebuild and restart containers
+            docker compose -f docker-compose.prod.yml up -d --build
+            
+            # Clean up
+            docker image prune -f
+            
+            echo "🎉 Deployment completed!"
