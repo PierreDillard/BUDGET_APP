@@ -18,7 +18,7 @@ COPY prisma ./prisma/
 FROM base AS builder
 
 # Installer toutes les dépendances (dev + prod)
-RUN npm ci && npm cache clean --force
+RUN npm install && npm cache clean --force
 
 # Copier le code source
 COPY . .
@@ -33,7 +33,7 @@ RUN npm run build
 FROM base AS production
 
 # Installer seulement les dépendances de production
-RUN npm ci --only=production && npm cache clean --force
+RUN npm install --only=production && npm cache clean --force
 
 # Copier les fichiers construits depuis le builder
 COPY --from=builder /app/dist ./dist
