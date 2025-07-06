@@ -16,7 +16,9 @@ COPY prisma ./prisma/
 
 # Builder stage
 FROM base AS builder
-RUN npm ci --only=production && npm cache clean --force
+
+# Installer toutes les dépendances (dev + prod)
+RUN npm ci && npm cache clean --force
 
 # Copier le code source
 COPY . .
@@ -30,13 +32,18 @@ RUN npm run build
 # Production stage
 FROM base AS production
 
-# Copier les dépendances depuis le builder
-COPY --from=builder /app/node_modules ./node_modules
+# Installer seulement les dépendances de production
+RUN npm ci --only=production && npm cache clean --force
+
+# Copier les fichiers construits depuis le builder
 COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/prisma ./prisma
 
-# Copier les fichiers de configuration
-COPY package*.json ./
+# Copier le healthcheck et le script d'initialisation
+COPY healthcheck.js ./
+COPY init.sh ./
+RUN chmod +x init.sh
 
 # Changer l'utilisateur
 USER nestjs
@@ -49,4 +56,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD node healthcheck.js
 
 # Commande de démarrage
-CMD ["npm", "run", "start:prod"]
+CMD ["./init.sh"]

@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { Plus, AlertTriangle, Settings, LogOut, Calculator, RefreshCw, BarChart3, TrendingUp, Wallet, Target, Clock, User } from "lucide-react";
+import { Plus, AlertTriangle, Settings, LogOut, Calculator, RefreshCw, BarChart3, TrendingUp, Wallet, Target,  User } from "lucide-react";
 import { useBudgetStore } from "@/store/budgetStore";
 import { RevenueExpenseScreen } from "@/components/screens/RevenueExpenseScreen";
 import { PlannedExpensesScreen } from "@/components/screens/PlannedExpensesScreen";

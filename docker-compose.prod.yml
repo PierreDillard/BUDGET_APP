@@ -1,10 +1,8 @@
-version: '3.8'
-
 services:
   # Main application (Frontend + Backend)
   app:
     build:
-      context: .
+      context: ./backend
       dockerfile: Dockerfile
       target: production
     container_name: budget-app
@@ -21,6 +19,11 @@ services:
       # App Configuration
       NODE_ENV: production
       PORT: 3001
+      
+      # Prisma Configuration
+      PRISMA_SCHEMA_ENGINE_BINARY: /app/node_modules/.prisma/client/schema-engine-debian-openssl-3.0.x
+      PRISMA_QUERY_ENGINE_BINARY: /app/node_modules/.prisma/client/query-engine-debian-openssl-3.0.x
+      PRISMA_FMT_BINARY: /app/node_modules/.prisma/client/prisma-fmt-debian-openssl-3.0.x
     volumes:
       - app_uploads:/app/uploads
       - app_logs:/app/logs
@@ -41,7 +44,7 @@ services:
       POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./backend/docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ./backend/docker/postgres/init.sql:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-budget_app}"]
       interval: 10s

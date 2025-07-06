@@ -1,4 +1,4 @@
-import React from 'react';
+/* import React from 'react';
 import { FeatureModule, FeatureConfig } from './registry';
 import { SliceCreator } from '../../store/types';
 
@@ -169,3 +169,4 @@ export class FeatureFactory {
     })();
   }
 }
+ */

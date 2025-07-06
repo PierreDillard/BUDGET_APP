@@ -4,7 +4,7 @@ const http = require('http');
 const options = {
   hostname: 'localhost',
   port: 3001,
-  path: '/api/v1/health',
+  path: '/health',
   method: 'GET',
   timeout: 3000
 };
