@@ -40,6 +40,7 @@ export function SettingsScreen() {
     currency: 'EUR' as Currency,
     monthStartDay: 1,
     marginPct: 0,
+    initialBalance: 0,
     notification: true,
   });
   
@@ -55,6 +56,7 @@ export function SettingsScreen() {
         currency: user.currency as Currency,
         monthStartDay: user.monthStartDay,
         marginPct: user.marginPct,
+        initialBalance: user.initialBalance || 0,
         notification: user.notification,
       });
     }
@@ -348,6 +350,25 @@ export function SettingsScreen() {
             </Select>
             <p className="text-sm text-gray-500">
               Définit le jour où commence votre mois budgétaire et où les revenus/dépenses récurrents sont appliqués
+            </p>
+          </div>
+
+          <Separator />
+
+          {/* Initial Balance */}
+          <div className="space-y-2">
+            <Label htmlFor="initialBalance">Solde initial du mois</Label>
+            <Input
+              id="initialBalance"
+              type="number"
+              step="0.01"
+              value={settings.initialBalance}
+              onChange={(e) => handleSettingChange('initialBalance', parseFloat(e.target.value) || 0)}
+              disabled={isLoading}
+              placeholder="0.00"
+            />
+            <p className="text-sm text-gray-500">
+              Solde de départ pour vos calculs mensuels. Ce montant sera votre solde au début du mois avant toute transaction.
             </p>
           </div>
 

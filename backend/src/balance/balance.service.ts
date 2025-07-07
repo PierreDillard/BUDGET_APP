@@ -20,42 +20,70 @@ export class BalanceService {
 
   async calculateBalance(user_id: string, month?: string): Promise<BalanceData> {
     try {
-      // Get user settings for margin calculation
+      // Get user settings for margin calculation and initial balance
       const user = await this.prisma.users.findUnique({
         where: { id: user_id },
-        select: { margin_pct: true },
+        select: { margin_pct: true, initial_balance: true },
       });
 
       if (!user) {
         throw new Error('User not found');
       }
 
-      // Get any balance adjustments
+      const today = new Date();
+
+      // Récupérer tous les revenus et dépenses
+      const incomes = await this.incomesService.findAll(user_id);
+      const expenses = await this.expensesService.findAll(user_id);
+      const plannedExpenses = await this.plannedExpensesService.findAll(user_id, false);
+
+      // Commencer avec le solde initial défini par l'utilisateur
+      let currentBalance = user.initial_balance;
+
+      // Ajouter tous les ajustements manuels (corrections, etc.)
       const adjustments = await this.getBalanceAdjustments(user_id);
-      const totalAdjustments = adjustments.reduce((sum, adj) => sum + adj.amount, 0);
+      const manualAdjustments = adjustments.filter(adj => adj.type !== 'MONTHLY_RESET');
+      currentBalance += manualAdjustments.reduce((sum, adj) => sum + adj.amount, 0);
 
-      // Calculate totals using frequency-aware methods
-      const totalIncome = await this.calculateMonthlyIncomes(user_id);
-      const totalExpenses = await this.calculateMonthlyExpenses(user_id);
+      // Ajouter les revenus du mois jusqu'à aujourd'hui
+      for (const income of incomes) {
+        if (income.dayOfMonth <= today.getDate()) {
+          currentBalance += income.amount;
+        }
+      }
+
+      // Soustraire les dépenses du mois jusqu'à aujourd'hui
+      for (const expense of expenses) {
+        if (expense.dayOfMonth <= today.getDate()) {
+          currentBalance -= expense.amount;
+        }
+      }
+
+      // Soustraire les budgets ponctuels déjà passés
+      const totalPlanned = plannedExpenses.reduce((sum, expense) => {
+        const expenseDate = new Date(expense.date);
+        if (expenseDate <= today) {
+          currentBalance -= expense.amount;
+        }
+        return sum + expense.amount;
+      }, 0);
+
+      // Total des revenus mensuels (pour affichage)
+      const totalIncome = incomes.reduce((sum, income) => sum + income.amount, 0);
       
-      // For planned expenses, only count unspent ones
-      const plannedStats = await this.plannedExpensesService.getStatistics(user_id);
-      const totalPlanned = plannedStats.unspent.amount;
+      // Total des dépenses mensuelles (pour affichage)
+      const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
 
-      // Calculate current balance including adjustments
-      const grossBalance = totalIncome - totalExpenses - totalPlanned + totalAdjustments;
-      const marginAmount = (grossBalance * user.margin_pct) / 100;
-      const currentBalance = grossBalance - marginAmount;
-
-      // For projection, we consider the balance without planned expenses already spent
-      const projectedBalance = currentBalance;
+      // Calculer la marge
+      const marginAmount = (currentBalance * user.margin_pct) / 100;
+      const finalBalance = currentBalance - marginAmount;
 
       const balanceData: BalanceData = {
-        currentBalance: Math.round(currentBalance * 100) / 100,
+        currentBalance: Math.round(finalBalance * 100) / 100,
         totalIncome: Math.round(totalIncome * 100) / 100,
         totalExpenses: Math.round(totalExpenses * 100) / 100,
         totalPlanned: Math.round(totalPlanned * 100) / 100,
-        projectedBalance: Math.round(projectedBalance * 100) / 100,
+        projectedBalance: Math.round(finalBalance * 100) / 100,
         marginAmount: Math.round(marginAmount * 100) / 100,
         adjustments: adjustments.map(adj => ({
           id: adj.id,
@@ -66,7 +94,7 @@ export class BalanceService {
         })),
       };
 
-      this.logger.log(`Balance calculated for user ${user_id}: ${currentBalance}€`);
+      this.logger.log(`Balance calculated for user ${user_id}: ${finalBalance}€ (initial: ${user.initial_balance}€, current: ${currentBalance}€)`);
       return balanceData;
     } catch (error) {
       this.logger.error('Error calculating balance:', error);
@@ -279,16 +307,56 @@ export class BalanceService {
   async calculateProjection(user_id: string, days: number = 30): Promise<ProjectionData[]> {
     try {
       const projection: ProjectionData[] = [];
-      const currentBalance = await this.calculateBalance(user_id);
-      let runningBalance = currentBalance.currentBalance;
+      const today = new Date();
+      
+      // Récupérer l'utilisateur pour avoir le solde initial
+      const user = await this.prisma.users.findUnique({
+        where: { id: user_id },
+        select: { initial_balance: true },
+      });
 
-      // Get recurring incomes and expenses
+      if (!user) {
+        throw new Error('User not found');
+      }
+      
+      // Récupérer tous les revenus et dépenses
       const incomes = await this.incomesService.findAll(user_id);
       const expenses = await this.expensesService.findAll(user_id);
-      const plannedExpenses = await this.plannedExpensesService.findAll(user_id, false); // Only unspent
+      const plannedExpenses = await this.plannedExpensesService.findAll(user_id, false);
+      
+      // Commencer avec le solde initial défini par l'utilisateur
+      let baseBalance = user.initial_balance;
 
-      const today = new Date();
+      // Ajouter tous les ajustements manuels (corrections, etc.)
+      const adjustments = await this.getBalanceAdjustments(user_id);
+      const manualAdjustments = adjustments.filter(adj => adj.type !== 'MONTHLY_RESET');
+      baseBalance += manualAdjustments.reduce((sum, adj) => sum + adj.amount, 0);
 
+      // Ajouter les revenus du mois jusqu'à aujourd'hui
+      for (const income of incomes) {
+        if (income.dayOfMonth <= today.getDate()) {
+          baseBalance += income.amount;
+        }
+      }
+      
+      // Soustraire les dépenses du mois jusqu'à aujourd'hui
+      for (const expense of expenses) {
+        if (expense.dayOfMonth <= today.getDate()) {
+          baseBalance -= expense.amount;
+        }
+      }
+      
+      // Soustraire les budgets ponctuels déjà passés
+      for (const planned of plannedExpenses) {
+        const plannedDate = new Date(planned.date);
+        if (plannedDate <= today) {
+          baseBalance -= planned.amount;
+        }
+      }
+
+      let runningBalance = baseBalance;
+
+      // Projection sur les jours suivants
       for (let i = 0; i < days; i++) {
         const projectionDate = addDays(today, i);
         const dayOfMonth = projectionDate.getDate();
@@ -299,102 +367,44 @@ export class BalanceService {
           plannedExpenses: [] as Array<{ label: string; amount: number }>,
         };
 
-        // Check for incomes on this day (with frequency support)
-        for (const income of incomes) {
-          const frequency = income.frequency || FrequencyType.MONTHLY;
-          const frequencyData = typeof income.frequencyData === 'string' 
-            ? JSON.parse(income.frequencyData) 
-            : income.frequencyData;
-
-          let shouldInclude = false;
-
-          switch (frequency) {
-            case FrequencyType.ONE_TIME:
-              // For one-time income, check exact date
-              if (frequencyData?.date) {
-                const oneTimeDate = new Date(frequencyData.date);
-                shouldInclude = oneTimeDate.toDateString() === projectionDate.toDateString();
-              }
-              break;
-            
-            case FrequencyType.MONTHLY:
-              // For monthly income, check day of month
-              shouldInclude = income.dayOfMonth === dayOfMonth;
-              break;
-            
-            case FrequencyType.QUARTERLY:
-            case FrequencyType.YEARLY:
-              // For quarterly/yearly, check if this month/day is due
-              shouldInclude = income.dayOfMonth === dayOfMonth && 
-                isDueInMonth(frequency, frequencyData, dayOfMonth, projectionDate.getMonth() + 1, projectionDate.getFullYear());
-              break;
+        // Revenus récurrents pour ce jour (seulement si >= aujourd'hui)
+        if (projectionDate >= today) {
+          for (const income of incomes) {
+            if (income.dayOfMonth === dayOfMonth) {
+              runningBalance += income.amount;
+              events.incomes.push({ label: income.label, amount: income.amount });
+            }
           }
 
-          if (shouldInclude) {
-            runningBalance += income.amount;
-            events.incomes.push({ label: income.label, amount: income.amount });
-          }
-        }
-
-        // Check for expenses on this day (with frequency support)
-        for (const expense of expenses) {
-          const frequency = expense.frequency || FrequencyType.MONTHLY;
-          const frequencyData = typeof expense.frequencyData === 'string' 
-            ? JSON.parse(expense.frequencyData) 
-            : expense.frequencyData;
-
-          let shouldInclude = false;
-
-          switch (frequency) {
-            case FrequencyType.ONE_TIME:
-              // For one-time expense, check exact date
-              if (frequencyData?.date) {
-                const oneTimeDate = new Date(frequencyData.date);
-                shouldInclude = oneTimeDate.toDateString() === projectionDate.toDateString();
-              }
-              break;
-            
-            case FrequencyType.MONTHLY:
-              // For monthly expense, check day of month
-              shouldInclude = expense.dayOfMonth === dayOfMonth;
-              break;
-            
-            case FrequencyType.QUARTERLY:
-            case FrequencyType.YEARLY:
-              // For quarterly/yearly, check if this month/day is due
-              shouldInclude = expense.dayOfMonth === dayOfMonth && 
-                isDueInMonth(frequency, frequencyData, dayOfMonth, projectionDate.getMonth() + 1, projectionDate.getFullYear());
-              break;
+          // Dépenses récurrentes pour ce jour (seulement si >= aujourd'hui)
+          for (const expense of expenses) {
+            if (expense.dayOfMonth === dayOfMonth) {
+              runningBalance -= expense.amount;
+              events.expenses.push({ label: expense.label, amount: expense.amount });
+            }
           }
 
-          if (shouldInclude) {
+          // Budgets ponctuels pour ce jour
+          const dayPlannedExpenses = plannedExpenses.filter(expense => {
+            const expenseDate = new Date(expense.date);
+            return expenseDate.toDateString() === projectionDate.toDateString();
+          });
+          
+          for (const expense of dayPlannedExpenses) {
             runningBalance -= expense.amount;
-            events.expenses.push({ label: expense.label, amount: expense.amount });
+            events.plannedExpenses.push({ label: expense.label, amount: expense.amount });
           }
-        }
-
-        // Check for planned expenses on this day
-        const dayPlannedExpenses = plannedExpenses.filter(expense => {
-          const expenseDate = new Date(expense.date);
-          return expenseDate.toDateString() === projectionDate.toDateString();
-        });
-        
-        for (const expense of dayPlannedExpenses) {
-          runningBalance -= expense.amount;
-          events.plannedExpenses.push({ label: expense.label, amount: expense.amount });
         }
 
         projection.push({
           date: projectionDate.toISOString().split('T')[0],
           balance: Math.round(runningBalance * 100) / 100,
           day: i,
-          events: Object.keys(events.incomes).length > 0 || 
-                  Object.keys(events.expenses).length > 0 || 
-                  Object.keys(events.plannedExpenses).length > 0 ? events : undefined,
+          events: events.incomes.length > 0 || events.expenses.length > 0 || events.plannedExpenses.length > 0 ? events : undefined,
         });
       }
 
-      this.logger.log(`Calculated projection for ${days} days for user ${user_id}`);
+      this.logger.log(`Calculated projection for ${days} days for user ${user_id} starting from balance: ${baseBalance}€`);
       return projection;
     } catch (error) {
       this.logger.error('Error calculating projection:', error);

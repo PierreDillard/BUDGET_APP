@@ -65,8 +65,10 @@ export function ProjectionChart() {
       const totalExpenses = events.expenses?.reduce((sum: number, expense: any) => sum + expense.amount, 0) || 0;
       const totalPlanned = events.plannedExpenses?.reduce((sum: number, expense: any) => sum + expense.amount, 0) || 0;
 
+      const hasTransactions = totalIncomes > 0 || totalExpenses > 0 || totalPlanned > 0;
+
       return (
-        <div className="bg-white/95 backdrop-blur-sm border border-gray-200 rounded-xl p-4 shadow-2xl">
+        <div className="bg-white/95 backdrop-blur-sm border border-gray-200 rounded-xl p-4 shadow-2xl max-w-xs">
           <p className="font-medium text-gray-800 mb-3 text-center">
             {date.toLocaleDateString('fr-FR', { 
               weekday: 'long',
@@ -76,50 +78,98 @@ export function ProjectionChart() {
             })}
           </p>
           
-          <div className="space-y-2">
-            <div className="flex items-center justify-between gap-4">
+          <div className="space-y-3">
+            {/* Solde actuel */}
+            <div className="flex items-center justify-between gap-4 pb-2 border-b border-gray-100">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-full shadow-sm"></div>
-                <span className="text-gray-700 text-sm">Solde</span>
+                <span className="text-gray-700 text-sm font-medium">Solde</span>
               </div>
               <span className={`font-bold text-sm ${data.balance >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
                 {data.balance?.toFixed(2)} {currencySymbol}
               </span>
             </div>
             
-            {totalIncomes > 0 && (
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-gradient-to-r from-blue-400 to-blue-500 rounded-full shadow-sm"></div>
-                  <span className="text-gray-700 text-sm">Revenus</span>
-                </div>
-                <span className="text-blue-600 font-semibold text-sm">
-                  +{totalIncomes.toFixed(2)} {currencySymbol}
-                </span>
+            {hasTransactions && (
+              <div className="space-y-2">
+                {/* Détail des revenus */}
+                {events.incomes && events.incomes.length > 0 && (
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <TrendingUp className="h-3 w-3 text-blue-500" />
+                      <span className="text-xs font-medium text-blue-600">Revenus ({events.incomes.length})</span>
+                    </div>
+                    {events.incomes.map((income: any, index: number) => (
+                      <div key={index} className="flex items-center justify-between gap-2 pl-4">
+                        <span className="text-xs text-gray-600 truncate">{income.label}</span>
+                        <span className="text-xs font-medium text-blue-600">
+                          +{income.amount.toFixed(2)} {currencySymbol}
+                        </span>
+                      </div>
+                    ))}
+                    <div className="flex items-center justify-between gap-2 pl-4 pt-1 border-t border-blue-100">
+                      <span className="text-xs font-medium text-blue-700">Total revenus</span>
+                      <span className="text-xs font-bold text-blue-600">
+                        +{totalIncomes.toFixed(2)} {currencySymbol}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Détail des dépenses récurrentes */}
+                {events.expenses && events.expenses.length > 0 && (
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <TrendingDown className="h-3 w-3 text-red-500" />
+                      <span className="text-xs font-medium text-red-600">Dépenses récurrentes ({events.expenses.length})</span>
+                    </div>
+                    {events.expenses.map((expense: any, index: number) => (
+                      <div key={index} className="flex items-center justify-between gap-2 pl-4">
+                        <span className="text-xs text-gray-600 truncate">{expense.label}</span>
+                        <span className="text-xs font-medium text-red-600">
+                          -{expense.amount.toFixed(2)} {currencySymbol}
+                        </span>
+                      </div>
+                    ))}
+                    <div className="flex items-center justify-between gap-2 pl-4 pt-1 border-t border-red-100">
+                      <span className="text-xs font-medium text-red-700">Total dépenses</span>
+                      <span className="text-xs font-bold text-red-600">
+                        -{totalExpenses.toFixed(2)} {currencySymbol}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Détail des budgets ponctuels */}
+                {events.plannedExpenses && events.plannedExpenses.length > 0 && (
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Calendar className="h-3 w-3 text-orange-500" />
+                      <span className="text-xs font-medium text-orange-600">Budgets ponctuels ({events.plannedExpenses.length})</span>
+                    </div>
+                    {events.plannedExpenses.map((expense: any, index: number) => (
+                      <div key={index} className="flex items-center justify-between gap-2 pl-4">
+                        <span className="text-xs text-gray-600 truncate">{expense.label}</span>
+                        <span className="text-xs font-medium text-orange-600">
+                          -{expense.amount.toFixed(2)} {currencySymbol}
+                        </span>
+                      </div>
+                    ))}
+                    <div className="flex items-center justify-between gap-2 pl-4 pt-1 border-t border-orange-100">
+                      <span className="text-xs font-medium text-orange-700">Total budgets</span>
+                      <span className="text-xs font-bold text-orange-600">
+                        -{totalPlanned.toFixed(2)} {currencySymbol}
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
-            
-            {totalExpenses > 0 && (
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-gradient-to-r from-red-400 to-red-500 rounded-full shadow-sm"></div>
-                  <span className="text-gray-700 text-sm">Dépenses</span>
-                </div>
-                <span className="text-red-600 font-semibold text-sm">
-                  -{totalExpenses.toFixed(2)} {currencySymbol}
-                </span>
-              </div>
-            )}
-            
-            {totalPlanned > 0 && (
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-gradient-to-r from-orange-400 to-orange-500 rounded-full shadow-sm"></div>
-                  <span className="text-gray-700 text-sm">Budget ponctuel</span>
-                </div>
-                <span className="text-orange-600 font-semibold text-sm">
-                  -{totalPlanned.toFixed(2)} {currencySymbol}
-                </span>
+
+            {/* Message si pas de transactions */}
+            {!hasTransactions && (
+              <div className="text-center py-2">
+                <span className="text-xs text-gray-500 italic">Aucune transaction prévue</span>
               </div>
             )}
           </div>

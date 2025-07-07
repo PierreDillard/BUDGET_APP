@@ -4,6 +4,7 @@ export interface User {
   currency: string;
   monthStartDay: number;
   marginPct: number;
+  initialBalance: number;
   notification: boolean;
   createdAt: string;
   updatedAt?: string;

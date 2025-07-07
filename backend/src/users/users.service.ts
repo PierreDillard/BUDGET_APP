@@ -17,6 +17,7 @@ export class UsersService {
         currency: true,
         month_start_day: true,
         margin_pct: true,
+        initial_balance: true,
         notification: true,
         created_at: true,
         updated_at: true,
@@ -34,6 +35,7 @@ export class UsersService {
       currency: user.currency,
       monthStartDay: user.month_start_day,
       marginPct: user.margin_pct,
+      initialBalance: user.initial_balance,
       notification: user.notification,
       createdAt: user.created_at.toISOString(),
       updatedAt: user.updated_at.toISOString(),
@@ -55,6 +57,10 @@ export class UsersService {
         dbData.margin_pct = updateUserDto.marginPct;
         delete dbData.marginPct;
       }
+      if (updateUserDto.initialBalance !== undefined) {
+        dbData.initial_balance = updateUserDto.initialBalance;
+        delete dbData.initialBalance;
+      }
 
       const updatedUser = await this.prisma.users.update({
         where: { id },
@@ -65,6 +71,7 @@ export class UsersService {
           currency: true,
           month_start_day: true,
           margin_pct: true,
+          initial_balance: true,
           notification: true,
           created_at: true,
           updated_at: true,
@@ -80,6 +87,7 @@ export class UsersService {
         currency: updatedUser.currency,
         monthStartDay: updatedUser.month_start_day,
         marginPct: updatedUser.margin_pct,
+        initialBalance: updatedUser.initial_balance,
         notification: updatedUser.notification,
         createdAt: updatedUser.created_at.toISOString(),
         updatedAt: updatedUser.updated_at.toISOString(),

@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { Plus, AlertTriangle, Settings, LogOut, Calculator, RefreshCw, BarChart3, TrendingUp, Wallet, Target,  User } from "lucide-react";
+import { Plus, AlertTriangle, Settings, LogOut, Calculator, RefreshCw, BarChart3, TrendingUp, Wallet, Target,  User, DollarSign } from "lucide-react";
 import { useBudgetStore } from "@/store/budgetStore";
 import { RevenueExpenseScreen } from "@/components/screens/RevenueExpenseScreen";
 import { PlannedExpensesScreen } from "@/components/screens/PlannedExpensesScreen";
@@ -11,6 +11,7 @@ import { SettingsScreen } from "@/components/screens/SettingsScreen";
 import { ProjectBudgetDashboard } from "@/components/projectBudget/ProjectBudgetDashboard";
 import AuthScreen from "@/components/auth/AuthScreen";
 import { BalanceAdjustmentModal, BalanceAdjustmentHistory } from "@/components/balance/BalanceAdjustmentModal";
+import { InitialBalanceModal } from "@/components/balance/InitialBalanceModal";
 import { MonthlyResetModal, MonthlyResetAlert } from "@/components/balance/MonthlyResetModal";
 import { Toaster } from "@/components/ui/toaster";
 import { ProjectionChart } from "@/components/charts/ProjectionChart";
@@ -299,6 +300,14 @@ export default function BudgetApp() {
                     </h2>
                   </div>
                   <div className="flex gap-2">
+                    <InitialBalanceModal 
+                      trigger={
+                        <Button variant="outline" size="sm" className="flex items-center gap-1">
+                          <DollarSign className="h-4 w-4" />
+                          Solde initial
+                        </Button>
+                      }
+                    />
                     <BalanceAdjustmentModal 
                       trigger={
                         <Button variant="outline" size="sm" className="flex items-center gap-1">

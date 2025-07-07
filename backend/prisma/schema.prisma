@@ -64,6 +64,7 @@ model users {
   currency         String             @default("EUR")
   month_start_day  Int                @default(1)
   margin_pct       Int                @default(0)
+  initial_balance  Float              @default(0)
   notification     Boolean            @default(true)
   created_at       DateTime           @default(now())
   updated_at       DateTime

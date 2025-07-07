@@ -40,6 +40,15 @@ export class UpdateUserDto {
   marginPct?: number;
 
   @ApiProperty({
+    description: 'Initial balance for monthly calculations',
+    example: 1000.00,
+    required: false,
+  })
+  @IsOptional()
+  @IsNumber({}, { message: 'Initial balance must be a number' })
+  initialBalance?: number;
+
+  @ApiProperty({
     description: 'Enable or disable notifications',
     example: true,
     required: false,
