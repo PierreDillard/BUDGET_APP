@@ -1,4 +1,4 @@
-name: 🚀 Budget App CI/CD
+name:  Budget App CI/CD
 
 on:
   push:
