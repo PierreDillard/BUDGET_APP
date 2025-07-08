@@ -2,7 +2,7 @@ name:  Budget App CI/CD
 
 on:
   push:
-    branches: [main]
+    branches: [master]
   workflow_dispatch:  # Permettre le déclenchement manuel
 
 jobs:
