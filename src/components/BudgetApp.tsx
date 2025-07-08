@@ -221,7 +221,7 @@ export default function BudgetApp() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 bg-slate-200 ">
+      <main className="flex-1 bg-gradient-to-br from-blue-100 via-indigo-100 to-slate-400">
         {/* Mobile Header */}
         <div className="md:hidden flex items-center justify-between mb-4 p-3 backdrop-blur-lg bg-white/30 rounded-xl border border-white/20">
           <div>
