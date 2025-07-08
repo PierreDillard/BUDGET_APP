@@ -4,7 +4,8 @@ import { IncomesService } from '../incomes/incomes.service';
 import { ExpensesService } from '../expenses/expenses.service';
 import { PlannedExpensesService } from '../planned-expenses/planned-expenses.service';
 import { BalanceData, ProjectionData, AlertData, BalanceAdjustmentDto, MonthlyResetDto, MonthlyResetStatusDto } from './dto/balance.dto';
-import { calculateMonthlyEquivalent, isDueInMonth, FrequencyType } from '../common/frequency.utils';
+import { calculateMonthlyEquivalent, isDueInMonth, isDueInCurrentMonth, FrequencyType, FrequencyData } from '../common/frequency.utils';
+import { calculateCurrentMonthAmount } from '../common/frequency-occurrence.utils';
 import { startOfMonth, endOfMonth, addDays, format, parseISO, isAfter, isBefore, differenceInDays, addMonths } from 'date-fns';
 
 @Injectable()
@@ -17,6 +18,24 @@ export class BalanceService {
     private expensesService: ExpensesService,
     private plannedExpensesService: PlannedExpensesService,
   ) {}
+
+  /**
+   * Convert string frequency to FrequencyType enum
+   */
+  private convertStringToFrequencyType(frequency: string | undefined): FrequencyType {
+    switch (frequency) {
+      case 'MONTHLY':
+        return FrequencyType.MONTHLY;
+      case 'QUARTERLY':
+        return FrequencyType.QUARTERLY;
+      case 'YEARLY':
+        return FrequencyType.YEARLY;
+      case 'ONE_TIME':
+        return FrequencyType.ONE_TIME;
+      default:
+        return FrequencyType.MONTHLY;
+    }
+  }
 
   async calculateBalance(user_id: string, month?: string): Promise<BalanceData> {
     try {
@@ -45,18 +64,34 @@ export class BalanceService {
       const manualAdjustments = adjustments.filter(adj => adj.type !== 'MONTHLY_RESET');
       currentBalance += manualAdjustments.reduce((sum, adj) => sum + adj.amount, 0);
 
-      // Ajouter les revenus du mois jusqu'à aujourd'hui
+      // Ajouter les revenus du mois en cours selon leur fréquence
       for (const income of incomes) {
-        if (income.dayOfMonth <= today.getDate()) {
-          currentBalance += income.amount;
-        }
+        const frequency = this.convertStringToFrequencyType(income.frequency as string);
+        const frequencyData = income.frequencyData as FrequencyData || null;
+        
+        const monthAmount = calculateCurrentMonthAmount(
+          income.amount, 
+          frequency, 
+          frequencyData, 
+          income.dayOfMonth, 
+          today
+        );
+        currentBalance += monthAmount;
       }
 
-      // Soustraire les dépenses du mois jusqu'à aujourd'hui
+      // Soustraire les dépenses du mois en cours selon leur fréquence
       for (const expense of expenses) {
-        if (expense.dayOfMonth <= today.getDate()) {
-          currentBalance -= expense.amount;
-        }
+        const frequency = this.convertStringToFrequencyType(expense.frequency as string);
+        const frequencyData = expense.frequencyData as FrequencyData || null;
+        
+        const monthAmount = calculateCurrentMonthAmount(
+          expense.amount, 
+          frequency, 
+          frequencyData, 
+          expense.dayOfMonth, 
+          today
+        );
+        currentBalance -= monthAmount;
       }
 
       // Soustraire les budgets ponctuels déjà passés
@@ -68,11 +103,29 @@ export class BalanceService {
         return sum + expense.amount;
       }, 0);
 
-      // Total des revenus mensuels (pour affichage)
-      const totalIncome = incomes.reduce((sum, income) => sum + income.amount, 0);
-      
-      // Total des dépenses mensuelles (pour affichage)
-      const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
+      // Total des revenus et dépenses pour le mois en cours (pour affichage)
+      const currentMonth = today.getMonth() + 1; // 1-12
+      const currentYear = today.getFullYear();
+      let totalIncome = 0;
+      let totalExpenses = 0;
+
+      for (const income of incomes) {
+        const frequency = this.convertStringToFrequencyType(income.frequency as string);
+        const frequencyData = income.frequencyData as FrequencyData || null;
+        
+        if (isDueInMonth(frequency, frequencyData, income.dayOfMonth, currentMonth, currentYear)) {
+          totalIncome += income.amount;
+        }
+      }
+
+      for (const expense of expenses) {
+        const frequency = this.convertStringToFrequencyType(expense.frequency as string);
+        const frequencyData = expense.frequencyData as FrequencyData || null;
+        
+        if (isDueInMonth(frequency, frequencyData, expense.dayOfMonth, currentMonth, currentYear)) {
+          totalExpenses += expense.amount;
+        }
+      }
 
       // Calculer la marge
       const marginAmount = (currentBalance * user.margin_pct) / 100;
@@ -332,17 +385,30 @@ export class BalanceService {
       const manualAdjustments = adjustments.filter(adj => adj.type !== 'MONTHLY_RESET');
       baseBalance += manualAdjustments.reduce((sum, adj) => sum + adj.amount, 0);
 
-      // Ajouter les revenus du mois jusqu'à aujourd'hui
+      // Ajouter les revenus du mois jusqu'à aujourd'hui selon leur fréquence
+      const currentMonth = today.getMonth() + 1; // 1-12
+      const currentYear = today.getFullYear();
+
       for (const income of incomes) {
-        if (income.dayOfMonth <= today.getDate()) {
-          baseBalance += income.amount;
+        const frequency = this.convertStringToFrequencyType(income.frequency as string);
+        const frequencyData = income.frequencyData as FrequencyData || null;
+        
+        if (isDueInMonth(frequency, frequencyData, income.dayOfMonth, currentMonth, currentYear)) {
+          if (income.dayOfMonth <= today.getDate()) {
+            baseBalance += income.amount;
+          }
         }
       }
       
-      // Soustraire les dépenses du mois jusqu'à aujourd'hui
+      // Soustraire les dépenses du mois jusqu'à aujourd'hui selon leur fréquence
       for (const expense of expenses) {
-        if (expense.dayOfMonth <= today.getDate()) {
-          baseBalance -= expense.amount;
+        const frequency = this.convertStringToFrequencyType(expense.frequency as string);
+        const frequencyData = expense.frequencyData as FrequencyData || null;
+        
+        if (isDueInMonth(frequency, frequencyData, expense.dayOfMonth, currentMonth, currentYear)) {
+          if (expense.dayOfMonth <= today.getDate()) {
+            baseBalance -= expense.amount;
+          }
         }
       }
       
@@ -369,18 +435,31 @@ export class BalanceService {
 
         // Revenus récurrents pour ce jour (seulement si >= aujourd'hui)
         if (projectionDate >= today) {
+          const projectionMonth = projectionDate.getMonth() + 1;
+          const projectionYear = projectionDate.getFullYear();
+          
           for (const income of incomes) {
-            if (income.dayOfMonth === dayOfMonth) {
-              runningBalance += income.amount;
-              events.incomes.push({ label: income.label, amount: income.amount });
+            const frequency = this.convertStringToFrequencyType(income.frequency as string);
+            const frequencyData = income.frequencyData as FrequencyData || null;
+            
+            if (isDueInMonth(frequency, frequencyData, income.dayOfMonth, projectionMonth, projectionYear)) {
+              if (income.dayOfMonth === dayOfMonth) {
+                runningBalance += income.amount;
+                events.incomes.push({ label: income.label, amount: income.amount });
+              }
             }
           }
 
           // Dépenses récurrentes pour ce jour (seulement si >= aujourd'hui)
           for (const expense of expenses) {
-            if (expense.dayOfMonth === dayOfMonth) {
-              runningBalance -= expense.amount;
-              events.expenses.push({ label: expense.label, amount: expense.amount });
+            const frequency = this.convertStringToFrequencyType(expense.frequency as string);
+            const frequencyData = expense.frequencyData as FrequencyData || null;
+            
+            if (isDueInMonth(frequency, frequencyData, expense.dayOfMonth, projectionMonth, projectionYear)) {
+              if (expense.dayOfMonth === dayOfMonth) {
+                runningBalance -= expense.amount;
+                events.expenses.push({ label: expense.label, amount: expense.amount });
+              }
             }
           }
 
@@ -473,9 +552,19 @@ export class BalanceService {
         where: { user_id },
       });
 
+      const today = new Date();
+      const currentMonth = today.getMonth() + 1;
+      const currentYear = today.getFullYear();
+
       return incomes.reduce((total, income) => {
-        const frequency = (income as any).frequency || 'MONTHLY';
-        return total + calculateMonthlyEquivalent(income.amount, frequency);
+        const frequency = this.convertStringToFrequencyType((income as any).frequency);
+        const frequencyData = (income as any).frequency_data as FrequencyData || null;
+        
+        // Ne compter que si c'est dû ce mois-ci
+        if (isDueInMonth(frequency, frequencyData, (income as any).day_of_month, currentMonth, currentYear)) {
+          return total + income.amount;
+        }
+        return total;
       }, 0);
     } catch (error) {
       this.logger.error('Error calculating monthly incomes:', error);
@@ -489,9 +578,19 @@ export class BalanceService {
         where: { user_id },
       });
 
+      const today = new Date();
+      const currentMonth = today.getMonth() + 1;
+      const currentYear = today.getFullYear();
+
       return expenses.reduce((total, expense) => {
-        const frequency = (expense as any).frequency || 'MONTHLY';
-        return total + calculateMonthlyEquivalent(expense.amount, frequency);
+        const frequency = this.convertStringToFrequencyType((expense as any).frequency);
+        const frequencyData = (expense as any).frequency_data as FrequencyData || null;
+        
+        // Ne compter que si c'est dû ce mois-ci
+        if (isDueInMonth(frequency, frequencyData, (expense as any).day_of_month, currentMonth, currentYear)) {
+          return total + expense.amount;
+        }
+        return total;
       }, 0);
     } catch (error) {
       this.logger.error('Error calculating monthly expenses:', error);

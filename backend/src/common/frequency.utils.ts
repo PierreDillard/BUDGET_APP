@@ -13,6 +13,7 @@ export interface FrequencyData {
 
 /**
  * Calculate monthly equivalent amount based on frequency
+ * @deprecated Use isDueInCurrentMonth instead for accurate frequency handling
  */
 export function calculateMonthlyEquivalent(amount: number, frequency: FrequencyType): number {
   switch (frequency) {
@@ -27,6 +28,20 @@ export function calculateMonthlyEquivalent(amount: number, frequency: FrequencyT
     default:
       return amount;
   }
+}
+
+/**
+ * Check if an income/expense is due in the current month
+ */
+export function isDueInCurrentMonth(
+  frequency: FrequencyType,
+  frequencyData: FrequencyData | null,
+  today: Date = new Date()
+): boolean {
+  const currentMonth = today.getMonth() + 1; // 1-12
+  const currentYear = today.getFullYear();
+  
+  return isDueInMonth(frequency, frequencyData, 1, currentMonth, currentYear);
 }
 
 /**
