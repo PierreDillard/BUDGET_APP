@@ -66,21 +66,18 @@ export default function BudgetApp() {
     return <AuthScreen />;
   }
 
-  // Calculer les totaux depuis les données réelles
-  const totalIncome = incomes.reduce((sum, income) => sum + income.amount, 0);
-  const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
-  const totalPlanned = plannedExpenses
-    .filter(expense => !expense.spent)
-    .reduce((sum, expense) => sum + expense.amount, 0);
+  // COORDINATION AVEC PROJECTIONCHART: Utiliser exactement la même logique
+  // Copié depuis ProjectionChart pour assurer la cohérence parfaite
+  const currentBalance = balance?.currentBalance || 0;
   
-  const currentBalance = balance?.currentBalance ?? (totalIncome - totalExpenses - totalPlanned);
-  
+  // Si balance n'est pas disponible, utiliser les valeurs par défaut
+  // mais toujours prioriser les données du backend quand disponibles
   const balanceData = balance || {
-    currentBalance,
-    totalIncome,
-    totalExpenses,
-    totalPlanned,
-    projectedBalance: currentBalance
+    currentBalance: 0,
+    totalIncome: 0,
+    totalExpenses: 0,
+    totalPlanned: 0,
+    projectedBalance: 0
   };
 
   const currentMonth = new Date().toLocaleDateString('fr-FR', { 

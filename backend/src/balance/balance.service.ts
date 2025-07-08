@@ -104,8 +104,8 @@ export class BalanceService {
       }, 0);
 
       // Total des revenus et dépenses pour le mois en cours (pour affichage)
-      const currentMonth = today.getMonth() + 1; // 1-12
-      const currentYear = today.getFullYear();
+      // IMPORTANT: Utiliser la même logique que pour le calcul du solde (calculateCurrentMonthAmount)
+      // pour garantir la cohérence entre l'affichage et le solde calculé
       let totalIncome = 0;
       let totalExpenses = 0;
 
@@ -113,18 +113,28 @@ export class BalanceService {
         const frequency = this.convertStringToFrequencyType(income.frequency as string);
         const frequencyData = income.frequencyData as FrequencyData || null;
         
-        if (isDueInMonth(frequency, frequencyData, income.dayOfMonth, currentMonth, currentYear)) {
-          totalIncome += income.amount;
-        }
+        const monthAmount = calculateCurrentMonthAmount(
+          income.amount, 
+          frequency, 
+          frequencyData, 
+          income.dayOfMonth, 
+          today
+        );
+        totalIncome += monthAmount;
       }
 
       for (const expense of expenses) {
         const frequency = this.convertStringToFrequencyType(expense.frequency as string);
         const frequencyData = expense.frequencyData as FrequencyData || null;
         
-        if (isDueInMonth(frequency, frequencyData, expense.dayOfMonth, currentMonth, currentYear)) {
-          totalExpenses += expense.amount;
-        }
+        const monthAmount = calculateCurrentMonthAmount(
+          expense.amount, 
+          frequency, 
+          frequencyData, 
+          expense.dayOfMonth, 
+          today
+        );
+        totalExpenses += monthAmount;
       }
 
       // Calculer la marge
