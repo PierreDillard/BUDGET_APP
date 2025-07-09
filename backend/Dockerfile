@@ -39,9 +39,16 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/prisma ./prisma
 COPY --from=builder /app/dist ./dist
 
+# Copier package.json pour les scripts npm
+COPY package.json ./
+
 # Scripts d'initialisation
 COPY healthcheck.js init.sh ./
-RUN chmod +x init.sh
+
+# Changer les permissions AVANT de switcher d'utilisateur
+RUN chmod +x init.sh && \
+    chown nestjs:nodejs init.sh healthcheck.js && \
+    chown -R nestjs:nodejs /app
 
 USER nestjs
 EXPOSE 3001
