@@ -90,11 +90,10 @@ export const YEARLY_MONTH_OPTIONS = [
 export function isDueInMonth(
   frequency: FrequencyType,
   frequencyData: FrequencyData | null | undefined,
-  dayOfMonth: number,
   month: number, // 1-12
   year: number
 ): boolean {
-  const today = new Date();
+
   
   switch (frequency) {
     case 'ONE_TIME':

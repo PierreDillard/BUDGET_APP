@@ -67,8 +67,6 @@ export default function BudgetApp() {
   }
 
 
-  const currentBalance = balance?.currentBalance || 0;
-  
 
   const balanceData = balance || {
     currentBalance: 0,

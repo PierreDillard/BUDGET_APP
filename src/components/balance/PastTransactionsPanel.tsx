@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import  { useState } from 'react';
 import { History, ChevronDown, ChevronUp, Calendar, TrendingUp, TrendingDown, CreditCard } from 'lucide-react';
 
 interface PastTransaction {

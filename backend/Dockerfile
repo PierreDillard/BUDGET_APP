@@ -8,26 +8,28 @@ RUN apk add --no-cache libc6-compat openssl \
 WORKDIR /app
 
 ####################
-# Frontend Dependencies Stage
-####################
-FROM base AS frontend-deps
-WORKDIR /app/frontend
-COPY ../package*.json ./
-RUN npm ci && npm cache clean --force
-
-####################
 # Frontend Builder Stage
 ####################
-FROM frontend-deps AS frontend-builder
-WORKDIR /app/frontend
-COPY ../src ./src
-COPY ../public ./public
-COPY ../index.html ./
-COPY ../vite.config.ts ./
-COPY ../tsconfig.json ./
-COPY ../tsconfig.node.json ./
-COPY ../tailwind.config.js ./
-COPY ../postcss.config.js ./
+FROM base AS frontend-builder
+WORKDIR /app
+
+# Copier d'abord package.json et package-lock.json pour utiliser le cache Docker
+COPY package*.json ./
+
+# Installer les dépendances
+RUN npm ci && npm cache clean --force
+
+# Copier tous les fichiers de configuration nécessaires
+COPY tsconfig.json tsconfig.node.json ./
+COPY vite.config.ts vitest.config.ts ./
+COPY tailwind.config.js postcss.config.js ./
+COPY index.html ./
+
+# Copier les sources frontend
+COPY src ./src
+
+# Construire le frontend
+ENV VITE_API_URL=/api/v1
 RUN npm run build
 
 ####################
@@ -35,9 +37,9 @@ RUN npm run build
 ####################
 FROM base AS backend-deps
 WORKDIR /app
-# Copier seulement les fichiers de dépendances
-COPY package*.json ./
-COPY prisma ./prisma/
+# Copier les fichiers de dépendances du backend
+COPY backend/package*.json ./
+COPY backend/prisma ./prisma/
 RUN npm ci --only=production && npm cache clean --force
 RUN npx prisma generate
 
@@ -46,10 +48,10 @@ RUN npx prisma generate
 ####################
 FROM base AS backend-builder
 WORKDIR /app
-COPY package*.json ./
-COPY prisma ./prisma/
+COPY backend/package*.json ./
+COPY backend/prisma ./prisma/
 RUN npm ci && npm cache clean --force
-COPY . .
+COPY backend/. .
 RUN npx prisma generate
 RUN npm run build
 
@@ -66,16 +68,15 @@ COPY --from=backend-deps /app/prisma ./prisma
 # Copier le build backend
 COPY --from=backend-builder /app/dist ./dist
 
-# Copier le build frontend dans le dossier public
-COPY --from=frontend-builder /app/frontend/dist ./public
+# Copier le build frontend dans le dossier public (IMPORTANT: Vite génère dans 'dist')
+COPY --from=frontend-builder /app/dist ./public
 
 # Copier package.json pour les scripts npm
-COPY package.json ./
+COPY --from=backend-builder /app/package.json ./
 
 # Scripts d'initialisation
-COPY healthcheck.js ./
+COPY backend/healthcheck.js ./
 
-# Rester en root temporairement pour debug
 # USER nestjs
 EXPOSE 3001
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \

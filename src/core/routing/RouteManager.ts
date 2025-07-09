@@ -1,4 +1,4 @@
-import React from 'react';
+/* import React from 'react';
 import { FeatureRoute } from '../features/registry';
 
 export interface DynamicRoute extends FeatureRoute {
@@ -47,3 +47,4 @@ export class RouteManager {
 
 export const routeManager = new RouteManager();
 export default routeManager;
+ */

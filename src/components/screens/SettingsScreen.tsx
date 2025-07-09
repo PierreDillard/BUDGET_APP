@@ -181,6 +181,7 @@ export function SettingsScreen() {
         currency: user.currency as Currency,
         monthStartDay: user.monthStartDay,
         marginPct: user.marginPct,
+        initialBalance: user.initialBalance || 0,
         notification: user.notification,
       });
     }

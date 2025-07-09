@@ -1,4 +1,4 @@
-// Core feature management system
+/* // Core feature management system
 export interface FeatureConfig {
   name: string;
   version: string;
@@ -131,3 +131,4 @@ class FeatureRegistry {
 
 export const featureRegistry = new FeatureRegistry();
 export default featureRegistry;
+ */
