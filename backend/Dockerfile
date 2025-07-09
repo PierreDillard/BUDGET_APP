@@ -1,59 +1,40 @@
-# Budget App Backend Dockerfile
+####################
+# Base Stage
+####################
 FROM node:18-alpine AS base
-
-# Installer les dépendances système
-RUN apk add --no-cache \
-    libc6-compat \
-    openssl \
+RUN apk add --no-cache libc6-compat openssl \
     && addgroup --system --gid 1001 nodejs \
-    && adduser --system --uid 1001 nestjs
-
+    && adduser  --system --uid 1001 nestjs
 WORKDIR /app
-
-# Copier les fichiers de dépendances
+# Copier seulement package*.json et prisma pour utiliser le cache Docker
 COPY package*.json ./
 COPY prisma ./prisma/
 
-# Builder stage
+####################
+# Builder Stage
+####################
 FROM base AS builder
-
-# Installer toutes les dépendances (dev + prod)
 RUN npm install && npm cache clean --force
-
-# Copier le code source
 COPY . .
-
-# Générer le client Prisma
 RUN npx prisma generate
-
-# Builder l'application
 RUN npm run build
 
-# Production stage
+####################
+# Production Stage
+####################
 FROM base AS production
+WORKDIR /app
+# On récupère modules et build depuis builder
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/dist        ./dist
+COPY --from=builder /app/prisma      ./prisma
 
-# Installer seulement les dépendances de production
-RUN npm install --only=production && npm cache clean --force
-
-# Copier les fichiers construits depuis le builder
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/prisma ./prisma
-
-# Copier le healthcheck et le script d'initialisation
-COPY healthcheck.js ./
-COPY init.sh ./
+# On ajoute init + healthcheck
+COPY healthcheck.js init.sh ./
 RUN chmod +x init.sh
 
-# Changer l'utilisateur
 USER nestjs
-
-# Exposer le port
 EXPOSE 3001
-
-# Healthcheck
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD node healthcheck.js
-
-# Commande de démarrage
+  CMD node healthcheck.js
 CMD ["./init.sh"]
