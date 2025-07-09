@@ -22,11 +22,11 @@ services:
     networks:
       - budget-network
 
-  # Main application
+  # Main application (Backend + Frontend)
   app:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./backend/Dockerfile
       target: production
     container_name: budget-app
     restart: unless-stopped
