@@ -2,6 +2,8 @@ services:
   # PostgreSQL Database (start first)
   postgres:
     image: postgres:15-alpine
+    env_file:
+      - .env.prod
     container_name: budget-postgres
     restart: unless-stopped
     environment:
