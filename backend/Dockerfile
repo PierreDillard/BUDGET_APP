@@ -47,4 +47,4 @@ USER nestjs
 EXPOSE 3001
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD node healthcheck.js
-CMD ["./init.sh"]
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/main.js"]
