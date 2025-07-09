@@ -6,15 +6,24 @@ RUN apk add --no-cache libc6-compat openssl \
     && addgroup --system --gid 1001 nodejs \
     && adduser  --system --uid 1001 nestjs
 WORKDIR /app
-# Copier seulement package*.json et prisma pour utiliser le cache Docker
+
+####################
+# Dependencies Stage
+####################
+FROM base AS deps
+# Copier seulement les fichiers de dépendances
 COPY package*.json ./
 COPY prisma ./prisma/
+RUN npm ci --only=production && npm cache clean --force
+RUN npx prisma generate
 
 ####################
 # Builder Stage
 ####################
 FROM base AS builder
-RUN npm install && npm cache clean --force
+COPY package*.json ./
+COPY prisma ./prisma/
+RUN npm ci && npm cache clean --force
 COPY . .
 RUN npx prisma generate
 RUN npm run build
@@ -24,12 +33,13 @@ RUN npm run build
 ####################
 FROM base AS production
 WORKDIR /app
-# On récupère modules et build depuis builder
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/dist        ./dist
-COPY --from=builder /app/prisma      ./prisma
 
-# On ajoute init + healthcheck
+# Copier seulement les dépendances de production
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/prisma ./prisma
+COPY --from=builder /app/dist ./dist
+
+# Scripts d'initialisation
 COPY healthcheck.js init.sh ./
 RUN chmod +x init.sh
 

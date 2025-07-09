@@ -66,12 +66,10 @@ export default function BudgetApp() {
     return <AuthScreen />;
   }
 
-  // COORDINATION AVEC PROJECTIONCHART: Utiliser exactement la même logique
-  // Copié depuis ProjectionChart pour assurer la cohérence parfaite
+
   const currentBalance = balance?.currentBalance || 0;
   
-  // Si balance n'est pas disponible, utiliser les valeurs par défaut
-  // mais toujours prioriser les données du backend quand disponibles
+
   const balanceData = balance || {
     currentBalance: 0,
     totalIncome: 0,

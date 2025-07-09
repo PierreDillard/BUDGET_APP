@@ -1,39 +1,5 @@
 services:
-  # Main application (Frontend + Backend)
-  app:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-      target: production
-    container_name: budget-app
-    restart: unless-stopped
-    ports:
-      - "${APP_PORT:-3001}:3001"
-    environment:
-      # Database
-      DATABASE_URL: "postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}"
-      
-      # JWT & Security
-      JWT_SECRET: "${JWT_SECRET}"
-      
-      # App Configuration
-      NODE_ENV: production
-      PORT: 3001
-      
-      # Prisma Configuration
-      PRISMA_SCHEMA_ENGINE_BINARY: /app/node_modules/.prisma/client/schema-engine-debian-openssl-3.0.x
-      PRISMA_QUERY_ENGINE_BINARY: /app/node_modules/.prisma/client/query-engine-debian-openssl-3.0.x
-      PRISMA_FMT_BINARY: /app/node_modules/.prisma/client/prisma-fmt-debian-openssl-3.0.x
-    volumes:
-      - app_uploads:/app/uploads
-      - app_logs:/app/logs
-    depends_on:
-      postgres:
-        condition: service_healthy
-    networks:
-      - budget-network
-
-  # PostgreSQL Database
+  # PostgreSQL Database (start first)
   postgres:
     image: postgres:15-alpine
     container_name: budget-postgres
@@ -44,12 +10,43 @@ services:
       POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./backend/docker/postgres/init.sql:/docker-entrypoint-initdb.d:ro
+      - ./backend/docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-budget_app}"]
-      interval: 10s
-      timeout: 5s
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+    networks:
+      - budget-network
+
+  # Main application
+  app:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: production
+    container_name: budget-app
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-3001}:3001"
+    environment:
+      DATABASE_URL: "postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}"
+      JWT_SECRET: "${JWT_SECRET}"
+      NODE_ENV: production
+      PORT: 3001
+    volumes:
+      - app_uploads:/app/uploads
+      - app_logs:/app/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "healthcheck.js"]
+      interval: 30s
+      timeout: 10s
       retries: 5
+      start_period: 60s
     networks:
       - budget-network
 
