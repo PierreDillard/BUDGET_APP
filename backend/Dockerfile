@@ -34,7 +34,6 @@ RUN npm run build
 FROM base AS production
 WORKDIR /app
 
-
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/prisma ./prisma
 COPY --from=builder /app/dist ./dist
@@ -43,12 +42,13 @@ COPY --from=builder /app/dist ./dist
 COPY package.json ./
 
 # Scripts d'initialisation
-COPY healthcheck.js init.sh ./
-RUN chmod +x init.sh
+COPY healthcheck.js ./
 
 # Rester en root temporairement pour debug
 # USER nestjs
 EXPOSE 3001
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD node healthcheck.js
-CMD ["./init.sh"]
+
+# Commande directe sans script externe
+CMD ["sh", "-c", "npx prisma migrate deploy && npm run start:prod"]
