@@ -1,7 +1,6 @@
 version: '3.8'
 
 services:
-  # PostgreSQL Database (start first)
   postgres:
     image: postgres:15-alpine
     env_file:
@@ -24,7 +23,6 @@ services:
     networks:
       - budget-network
 
-  # Backend API
   app:
     build:
       context: ./backend
@@ -51,13 +49,12 @@ services:
       start_period: 60s
     networks:
       - budget-network
-    # Pas d'exposition de port - communication interne seulement
 
-  # Frontend
+  # Frontend - contexte à la racine maintenant
   frontend:
     build:
-      context: ./frontend
-      dockerfile: Dockerfile
+      context: .              # ← Changé : contexte à la racine
+      dockerfile: Dockerfile.frontend  # ← Nouveau nom pour éviter confusion
       target: production
     container_name: budget-frontend
     restart: unless-stopped
