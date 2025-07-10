@@ -4,54 +4,29 @@
 FROM node:18-alpine AS base
 RUN apk add --no-cache libc6-compat openssl \
     && addgroup --system --gid 1001 nodejs \
-    && adduser  --system --uid 1001 nestjs
+    && adduser --system --uid 1001 nestjs
 WORKDIR /app
 
 ####################
-# Frontend Builder Stage
+# Dependencies Stage
 ####################
-FROM base AS frontend-builder
+FROM base AS deps
 WORKDIR /app
-
-# Copier d'abord package.json et package-lock.json pour utiliser le cache Docker
 COPY package*.json ./
-
-# Installer les dépendances
-RUN npm ci && npm cache clean --force
-
-# Copier tous les fichiers de configuration nécessaires
-COPY tsconfig.json tsconfig.node.json ./
-COPY vite.config.ts vitest.config.ts ./
-COPY tailwind.config.js postcss.config.js ./
-COPY index.html ./
-
-# Copier les sources frontend
-COPY src ./src
-
-# Construire le frontend
-ENV VITE_API_URL=/api/v1
-RUN npm run build
-
-####################
-# Backend Dependencies Stage
-####################
-FROM base AS backend-deps
-WORKDIR /app
-# Copier les fichiers de dépendances du backend
-COPY backend/package*.json ./
-COPY backend/prisma ./prisma/
+# Si prisma est dans le dossier backend
+COPY prisma ./prisma/
 RUN npm ci --only=production && npm cache clean --force
 RUN npx prisma generate
 
 ####################
-# Backend Builder Stage
+# Builder Stage
 ####################
-FROM base AS backend-builder
+FROM base AS builder
 WORKDIR /app
-COPY backend/package*.json ./
-COPY backend/prisma ./prisma/
+COPY package*.json ./
+COPY prisma ./prisma/
 RUN npm ci && npm cache clean --force
-COPY backend/. .
+COPY . .
 RUN npx prisma generate
 RUN npm run build
 
@@ -61,26 +36,23 @@ RUN npm run build
 FROM base AS production
 WORKDIR /app
 
-# Copier les dépendances backend
-COPY --from=backend-deps /app/node_modules ./node_modules
-COPY --from=backend-deps /app/prisma ./prisma
+# Copier les dépendances
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/prisma ./prisma
 
 # Copier le build backend
-COPY --from=backend-builder /app/dist ./dist
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/package.json ./
 
-# Copier le build frontend dans le dossier public (IMPORTANT: Vite génère dans 'dist')
-COPY --from=frontend-builder /app/dist ./public
+# Script de santé - assurez-vous que healthcheck.js existe dans backend/
+COPY healthcheck.js ./
 
-# Copier package.json pour les scripts npm
-COPY --from=backend-builder /app/package.json ./
+RUN chown -R nestjs:nodejs /app
 
-# Scripts d'initialisation
-COPY backend/healthcheck.js ./
-
-# USER nestjs
+USER nestjs
 EXPOSE 3001
+
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD node healthcheck.js
 
-# Commande directe sans script externe
 CMD ["sh", "-c", "npx prisma migrate deploy && npm run start:prod"]

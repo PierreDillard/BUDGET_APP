@@ -7,6 +7,9 @@ ENV=${1:-production}
 COMPOSE_FILE="docker-compose.prod.yml"
 ENV_FILE=".env.prod"
 
+if [ -f "$ENV_FILE" ]; then
+  export $(cat $ENV_FILE | grep -v '^#' | xargs)
+fi
 if [ "$ENV" = "dev" ]; then
   COMPOSE_FILE="docker-compose.dev.yml"
   ENV_FILE=".env"

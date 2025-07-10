@@ -1,15 +1,14 @@
-// Healthcheck pour Docker
 const http = require('http');
 
 const options = {
   hostname: 'localhost',
   port: 3001,
-  path: '/health',
+  path: '/api/v1/health',  // ← Correction ici
   method: 'GET',
-  timeout: 3000
+  timeout: 2000
 };
 
-const request = http.request(options, (res) => {
+const req = http.request(options, (res) => {
   if (res.statusCode === 200) {
     console.log('✅ Health check passed');
     process.exit(0);
@@ -19,15 +18,15 @@ const request = http.request(options, (res) => {
   }
 });
 
-request.on('error', (err) => {
-  console.log('❌ Health check failed:', err.message);
+req.on('error', (err) => {
+  console.log('❌ Health check error:', err.message);
   process.exit(1);
 });
 
-request.on('timeout', () => {
+req.on('timeout', () => {
   console.log('❌ Health check timeout');
-  request.destroy();
+  req.abort();
   process.exit(1);
 });
 
-request.end();
+req.end();
