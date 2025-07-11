@@ -28,7 +28,8 @@ COPY backend/prisma ./prisma/
 RUN npm ci && npm cache clean --force
 COPY . .
 RUN npx prisma generate
-RUN npx nest build
+RUN npm run build
+
 
 
 ####################
