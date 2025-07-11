@@ -27,7 +27,7 @@ async function bootstrap() {
   app.use(compression());
 
   // Serve static files (frontend) in production
-  if (process.env.NODE_ENV === 'production') {
+/*   if (process.env.NODE_ENV === 'production') {
     const publicPath = join(__dirname, '..', 'public');
     app.useStaticAssets(publicPath);
     app.setBaseViewsDir(publicPath);
@@ -41,7 +41,7 @@ async function bootstrap() {
     
     logger.log(`📁 Serving static files from: ${publicPath}`);
   }
-
+ */
   // CORS - allow all origins in production since we serve frontend from same domain
   const corsOrigins = process.env.NODE_ENV === 'production' 
     ? true 
