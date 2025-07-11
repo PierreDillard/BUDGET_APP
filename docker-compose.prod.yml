@@ -6,7 +6,7 @@ services:
     container_name: budget-postgres
     restart: unless-stopped
     env_file:
-      - .env.prod
+      - .env
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
@@ -32,7 +32,7 @@ services:
     ports:
       - "${APP_PORT:-3001}:3001"
     env_file:
-      - .env.prod
+      - .env
     environment:
       DATABASE_URL: ${DATABASE_URL}
       JWT_SECRET: ${JWT_SECRET}
