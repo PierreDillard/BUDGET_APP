@@ -1,4 +1,4 @@
-version: '3.8'
+
 
 services:
   postgres:
@@ -6,7 +6,7 @@ services:
     container_name: budget-postgres
     restart: unless-stopped
     env_file:
-      - .env
+      - ".env"
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
@@ -50,6 +50,19 @@ services:
       timeout: 10s
       retries: 5
       start_period: 60s
+    networks:
+      - budget-network
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: budget-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - app
     networks:
       - budget-network
 
