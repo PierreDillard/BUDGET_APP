@@ -11,10 +11,9 @@ WORKDIR /app
 # Dependencies Stage
 ####################
 FROM base AS deps
-# Contexte racine: copier depuis backend/prisma
 WORKDIR /app
 COPY package*.json ./
-COPY backend/prisma ./prisma/
+COPY prisma ./prisma/
 RUN npm ci && npm cache clean --force
 RUN npx prisma generate
 
@@ -24,34 +23,26 @@ RUN npx prisma generate
 FROM base AS builder
 WORKDIR /app
 COPY package*.json ./
-COPY backend/prisma ./prisma/
+COPY prisma ./prisma/
 RUN npm ci && npm cache clean --force
 COPY . .
 RUN npx prisma generate
 RUN npm run build
 
-
-
 ####################
 # Production Stage
 ####################
 FROM node:18-alpine AS production
-# Reprendre base plutôt que node pour user & libs
 RUN apk add --no-cache libc6-compat openssl \
     && addgroup --system --gid 1001 nodejs \
     && adduser --system --uid 1001 nestjs
 WORKDIR /app
 
-# Copier les dépendances et Prisma
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/prisma ./prisma
-
-# Copier le build backend
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package.json ./
-
-# Copier le script healthcheck depuis backend
-COPY backend/healthcheck.js ./healthcheck.js
+COPY healthcheck.js ./healthcheck.js
 
 RUN chown -R nestjs:nodejs /app
 USER nestjs
