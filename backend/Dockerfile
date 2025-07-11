@@ -15,7 +15,7 @@ FROM base AS deps
 WORKDIR /app
 COPY package*.json ./
 COPY backend/prisma ./prisma/
-RUN npm ci --only=production && npm cache clean --force
+RUN npm ci && npm cache clean --force
 RUN npx prisma generate
 
 ####################
