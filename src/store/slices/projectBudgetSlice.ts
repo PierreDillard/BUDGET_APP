@@ -5,6 +5,7 @@ import type {
   UpdateProjectBudgetRequest,
   AddContributionRequest
 } from '../../types/projectBudget';
+import { getActiveProjectBudgets } from '../../lib/projectBudget.utils';
 
 export const createProjectBudgetSlice: SliceCreator<ProjectBudgetState & ProjectBudgetActions> = (set, get) => ({
   // Initial state
@@ -18,8 +19,10 @@ export const createProjectBudgetSlice: SliceCreator<ProjectBudgetState & Project
   loadProjectBudgets: async () => {
     try {
       set((state) => ({ ...state, isLoadingProjectBudgets: true, projectBudgetError: null }));
-      const projectBudgets = await projectBudgetService.getProjectBudgets();
-      set((state) => ({ ...state, projectBudgets, isLoadingProjectBudgets: false }));
+      const allProjectBudgets = await projectBudgetService.getProjectBudgets();
+      // Filtrer pour ne garder que les budgets actifs (pas d'échéance dépassée)
+      const activeProjectBudgets = getActiveProjectBudgets(allProjectBudgets);
+      set((state) => ({ ...state, projectBudgets: activeProjectBudgets, isLoadingProjectBudgets: false }));
     } catch (error) {
       set((state) => ({
         ...state,

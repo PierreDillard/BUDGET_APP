@@ -3,11 +3,12 @@ import type { FrequencyType, FrequencyData } from '@/types';
 
 /**
  * Calculate monthly equivalent amount based on frequency
+ * For ONE_TIME items, returns the full amount to be included in balance calculations
  */
 export function calculateMonthlyEquivalent(amount: number, frequency: FrequencyType): number {
   switch (frequency) {
     case 'ONE_TIME':
-      return 0; // One-time amounts don't contribute to monthly calculations
+      return amount; // One-time amounts should be included in balance calculations
     case 'MONTHLY':
       return amount;
     case 'QUARTERLY':
@@ -175,4 +176,22 @@ export function getNextDueDate(
     default:
       return null;
   }
+}
+
+/**
+ * Check if a ONE_TIME income/expense is expired (date is in the past)
+ */
+export function isOneTimeExpired(frequency: FrequencyType, frequencyData: FrequencyData | null | undefined): boolean {
+  if (frequency !== 'ONE_TIME' || !frequencyData?.date) {
+    return false; // Not a one-time item or no date, so not expired
+  }
+  
+  const today = new Date();
+  const itemDate = new Date(frequencyData.date);
+  
+  // Set hours to 0 for date comparison
+  today.setHours(0, 0, 0, 0);
+  itemDate.setHours(0, 0, 0, 0);
+  
+  return itemDate < today;
 }

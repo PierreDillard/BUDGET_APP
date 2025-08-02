@@ -48,7 +48,28 @@ export function ProjectionChart() {
   const minBalance = Math.min(...chartData.map(d => d.balance));
   const maxBalance = Math.max(...chartData.map(d => d.balance));
   const hasNegativeProjection = minBalance < 0;
-  const isPositiveTrend = finalBalance >= currentBalance;
+  
+  // Calcul de la tendance basé sur la pente moyenne
+  const calculateTrend = () => {
+    if (chartData.length < 2) return balanceChange >= 0;
+    
+    // Calculer la pente sur la première moitié et la seconde moitié
+    const midPoint = Math.floor(chartData.length / 2);
+    const firstHalf = chartData.slice(0, midPoint);
+    const secondHalf = chartData.slice(midPoint);
+    
+    const firstAvg = firstHalf.reduce((sum, point) => sum + point.balance, 0) / firstHalf.length;
+    const secondAvg = secondHalf.reduce((sum, point) => sum + point.balance, 0) / secondHalf.length;
+    
+    // La tendance est positive si la seconde moitié est meilleure que la première
+    // et si le changement final est aussi positif (ou neutre si petit changement)
+    const halfTrend = secondAvg > firstAvg;
+    const overallTrend = balanceChange >= -10; // Tolérance de -10€ pour les petites variations
+    
+    return halfTrend && overallTrend;
+  };
+  
+  const isPositiveTrend = calculateTrend();
 
   // Configuration des couleurs et symbole monétaire
   const currencySymbol = user?.currency === 'USD' ? '$' : user?.currency === 'GBP' ? '£' : '€';

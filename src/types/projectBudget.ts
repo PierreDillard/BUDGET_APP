@@ -6,10 +6,10 @@ export interface ProjectBudget {
   target_amount: number;
   current_amount: number;
   category: ProjectBudgetCategory;
-  target_date?: Date;
+  target_date?: Date | string; // Peut être Date ou string selon si vient de l'API ou non
   status: ProjectBudgetStatus;
-  created_at: Date;
-  updated_at: Date;
+  created_at: Date | string;
+  updated_at: Date | string;
   contributions?: BudgetContribution[];
 }
 

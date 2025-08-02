@@ -15,6 +15,7 @@ import { InitialBalanceModal } from "@/components/balance/InitialBalanceModal";
 import { MonthlyResetModal, MonthlyResetAlert } from "@/components/balance/MonthlyResetModal";
 import { Toaster } from "@/components/ui/toaster";
 import { ProjectionChart } from "@/components/charts/ProjectionChart";
+import { filterActiveOrSpentPlannedExpenses } from "@/lib/plannedExpense.utils";
 
 export default function BudgetApp() {
   const { 
@@ -80,6 +81,14 @@ export default function BudgetApp() {
     month: 'long', 
     year: 'numeric' 
   });
+
+  // Filter active planned expenses (remove expired unspent ones)
+  const activePlannedExpenses = filterActiveOrSpentPlannedExpenses(plannedExpenses);
+  
+  // Calculate total of active planned expenses
+  const activePlannedTotal = activePlannedExpenses
+    .filter(expense => !expense.spent)
+    .reduce((sum, expense) => sum + expense.amount, 0);
 
   const isNegativeProjection = balanceData.projectedBalance < 0;
   const currencySymbol = user?.currency === 'USD' ? '$' : user?.currency === 'GBP' ? '£' : '€';
@@ -348,10 +357,10 @@ export default function BudgetApp() {
                 <CardContent className="p-4">
                   <p className="text-gray-700 font-bold text-2xl mb-4">Budgets ponctuels</p>
                   <h3 className="text-2xl font-bold text-yellow-500">
-                    {balanceData.totalPlanned.toFixed(2)} {currencySymbol}
+                    {activePlannedTotal.toFixed(2)} {currencySymbol}
                   </h3>
                   <p className="text-xs text-gray-500">
-                    {plannedExpenses.filter(e => !e.spent).length} en attente
+                    {activePlannedExpenses.filter(e => !e.spent).length} en attente
                   </p>
                 </CardContent>
               </Card>

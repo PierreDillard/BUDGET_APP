@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Edit, Trash2, Calendar, CheckCircle, Clock, Euro, Loader2 } from "lucide-react";
 import { useBudgetStore } from "@/store/budgetStore";
 import { PlannedExpenseModal } from "@/components/modals/PlannedExpenseModal";
+import { filterActiveOrSpentPlannedExpenses, sortPlannedExpensesByDate } from "@/lib/plannedExpense.utils";
 import type { PlannedExpense } from "@/types";
 
 export function PlannedExpensesScreen() {
@@ -91,25 +92,24 @@ export function PlannedExpensesScreen() {
     return expenseDate < today;
   };
 
-  // Sort expenses by date
-  const sortedExpenses = [...plannedExpenses].sort((a, b) => 
-    new Date(a.date).getTime() - new Date(b.date).getTime()
-  );
+  // Filter and sort expenses - remove expired unspent items
+  const activeExpenses = filterActiveOrSpentPlannedExpenses(plannedExpenses);
+  const sortedExpenses = sortPlannedExpensesByDate(activeExpenses);
 
-  // Calculate statistics
-  const totalPlanned = plannedExpenses.reduce((sum, expense) => sum + expense.amount, 0);
-  const totalSpent = plannedExpenses
+  // Calculate statistics using active expenses only
+  const totalPlanned = activeExpenses.reduce((sum, expense) => sum + expense.amount, 0);
+  const totalSpent = activeExpenses
     .filter(expense => expense.spent)
     .reduce((sum, expense) => sum + expense.amount, 0);
-  const totalRemaining = plannedExpenses
+  const totalRemaining = activeExpenses
     .filter(expense => !expense.spent)
     .reduce((sum, expense) => sum + expense.amount, 0);
 
-  const upcomingCount = plannedExpenses.filter(expense => 
+  const upcomingCount = activeExpenses.filter(expense => 
     !expense.spent && isUpcoming(expense.date)
   ).length;
 
-  const overdueCount = plannedExpenses.filter(expense => 
+  const overdueCount = activeExpenses.filter(expense => 
     !expense.spent && isPast(expense.date)
   ).length;
 
@@ -150,7 +150,7 @@ border border-blue-300/30 shadow-md">
                   {formatCurrency(totalPlanned)}
                 </h3>
                 <p className="text-xs text-black mt-1">
-                  {plannedExpenses.length} budget{plannedExpenses.length > 1 ? 's' : ''}
+                  {activeExpenses.length} budget{activeExpenses.length > 1 ? 's' : ''}
                 </p>
               </div>
               <Calendar className="h-8 w-8 text-black" />
@@ -167,7 +167,7 @@ border border-blue-300/30 shadow-md">
                   {formatCurrency(totalSpent)}
                 </h3>
                 <p className="text-xs text-green-600 mt-1">
-                  {plannedExpenses.filter(e => e.spent).length} terminé{plannedExpenses.filter(e => e.spent).length > 1 ? 's' : ''}
+                  {activeExpenses.filter(e => e.spent).length} terminé{activeExpenses.filter(e => e.spent).length > 1 ? 's' : ''}
                 </p>
               </div>
               <CheckCircle className="h-8 w-8 text-green-600" />
@@ -216,7 +216,7 @@ border border-blue-300/30 shadow-md">
       <Card className="backdrop-blur-lg bg-white/40  hover:bg-white/60 transition-colors duration-200 border border-white/30 shadow-lg">
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
-            <span>Liste des budgets ({plannedExpenses.length})</span>
+            <span>Liste des budgets ({activeExpenses.length})</span>
             <Button 
               onClick={handleAdd} 
               size="sm"
@@ -228,7 +228,7 @@ border border-blue-300/30 shadow-md">
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {plannedExpenses.length === 0 ? (
+          {activeExpenses.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <p>Aucun budget planifié</p>

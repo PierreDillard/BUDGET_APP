@@ -7,6 +7,10 @@ import type {
   BudgetContribution,
   ProjectBudgetStats
 } from '../types/projectBudget';
+import { 
+  getActiveProjectBudgets, 
+  getSpentProjectBudgets 
+} from '../lib/projectBudget.utils';
 
 export class ProjectBudgetService extends BaseApiService {
   private readonly basePath = '/project-budgets';
@@ -87,6 +91,30 @@ export class ProjectBudgetService extends BaseApiService {
   async allocateMonthlyAmount(id: string, data: { amount: number; description?: string }): Promise<ProjectBudget> {
     const response = await this.post<ProjectBudget>(`${this.basePath}/${id}/monthly-allocation`, data);
     return response.data;
+  }
+
+  /**
+   * Récupère tous les budgets projets
+   */
+  async getAllProjectBudgets(): Promise<ProjectBudget[]> {
+    const response = await this.get<ProjectBudget[]>(this.basePath);
+    return response.data;
+  }
+
+  /**
+   * Récupère seulement les budgets projets actifs (à venir)
+   */
+  async getActiveProjectBudgets(): Promise<ProjectBudget[]> {
+    const allBudgets = await this.getAllProjectBudgets();
+    return getActiveProjectBudgets(allBudgets);
+  }
+
+  /**
+   * Récupère seulement les budgets projets dépensés (échéance dépassée)
+   */
+  async getSpentProjectBudgets(): Promise<ProjectBudget[]> {
+    const allBudgets = await this.getAllProjectBudgets();
+    return getSpentProjectBudgets(allBudgets);
   }
 }
 

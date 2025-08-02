@@ -6,7 +6,7 @@ import { Plus, Edit, Trash2, Calendar, Euro, Loader2 } from "lucide-react";
 import { useBudgetStore } from "@/store/budgetStore";
 import { IncomeModal } from "@/components/modals/IncomeModal";
 import { ExpenseModal } from "@/components/modals/ExpenseModal";
-import { calculateMonthlyEquivalent, getFrequencyDisplayText } from "@/lib/frequency.utils";
+import { calculateMonthlyEquivalent, getFrequencyDisplayText, isOneTimeExpired } from "@/lib/frequency.utils";
 import type { RecIncome, RecExpense } from "@/types";
 
 export function RevenueExpenseScreen() {
@@ -81,10 +81,18 @@ export function RevenueExpenseScreen() {
     return `Le ${day} de chaque mois`;
   };
 
-  const totalIncomes = incomes.reduce((sum, income) => 
+  // Filter out expired ONE_TIME items
+  const activeIncomes = incomes.filter(income => 
+    !isOneTimeExpired(income.frequency || 'MONTHLY', income.frequencyData)
+  );
+  const activeExpenses = expenses.filter(expense => 
+    !isOneTimeExpired(expense.frequency || 'MONTHLY', expense.frequencyData)
+  );
+
+  const totalIncomes = activeIncomes.reduce((sum, income) => 
     sum + calculateMonthlyEquivalent(income.amount, income.frequency || 'MONTHLY'), 0
   );
-  const totalExpenses = expenses.reduce((sum, expense) => 
+  const totalExpenses = activeExpenses.reduce((sum, expense) => 
     sum + calculateMonthlyEquivalent(expense.amount, expense.frequency || 'MONTHLY'), 0
   );
 
@@ -135,7 +143,7 @@ export function RevenueExpenseScreen() {
                   {formatCurrency(totalIncomes)}
                 </h3>
                 <p className="text-xs text-green-600 mt-1">
-                  {incomes.length} source{incomes.length > 1 ? 's' : ''} de revenu{incomes.length > 1 ? 's' : ''}
+                  {activeIncomes.length} source{activeIncomes.length > 1 ? 's' : ''} de revenu{activeIncomes.length > 1 ? 's' : ''}
                 </p>
               </div>
               <Euro className="h-8 w-8 text-green-600" />
@@ -152,7 +160,7 @@ export function RevenueExpenseScreen() {
                   {formatCurrency(totalExpenses)}
                 </h3>
                 <p className="text-xs text-red-600 mt-1">
-                  {expenses.length} dépense{expenses.length > 1 ? 's' : ''} récurrente{expenses.length > 1 ? 's' : ''}
+                  {activeExpenses.length} dépense{activeExpenses.length > 1 ? 's' : ''} récurrente{activeExpenses.length > 1 ? 's' : ''}
                 </p>
               </div>
               <Euro className="h-8 w-8 text-red-600" />
@@ -183,10 +191,10 @@ export function RevenueExpenseScreen() {
       <Tabs defaultValue="incomes" className="w-full">
         <TabsList className="grid w-full grid-cols-2 backdrop-blur-lg bg-white/30 border border-white/20">
           <TabsTrigger value="incomes">
-            Revenus ({incomes.length})
+            Revenus ({activeIncomes.length})
           </TabsTrigger>
           <TabsTrigger value="expenses">
-            Dépenses ({expenses.length})
+            Dépenses ({activeExpenses.length})
           </TabsTrigger>
         </TabsList>
 
@@ -207,7 +215,7 @@ export function RevenueExpenseScreen() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {incomes.length === 0 ? (
+              {activeIncomes.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
                   <Euro className="h-12 w-12 mx-auto mb-4 opacity-50" />
                   <p>Aucun revenu enregistré</p>
@@ -223,7 +231,7 @@ export function RevenueExpenseScreen() {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {incomes.map((income) => (
+                  {activeIncomes.map((income) => (
                     <div
                       key={income.id}
                       className="flex items-center justify-between p-4 rounded-lg border border-white/20 bg-white/20 hover:bg-white/30 transition-colors"
@@ -301,7 +309,7 @@ export function RevenueExpenseScreen() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {expenses.length === 0 ? (
+              {activeExpenses.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
                   <Euro className="h-12 w-12 mx-auto mb-4 opacity-50" />
                   <p>Aucune dépense enregistrée</p>
@@ -318,7 +326,7 @@ export function RevenueExpenseScreen() {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {expenses.map((expense) => (
+                  {activeExpenses.map((expense) => (
                     <div
                       key={expense.id}
                       className="flex items-center justify-between p-4 rounded-lg border border-white/20 bg-white/20 hover:bg-white/30 transition-colors"

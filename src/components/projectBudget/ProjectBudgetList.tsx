@@ -8,6 +8,7 @@ import { useBudgetStore } from '../../store/budgetStore';
 import { ProjectBudget, ProjectBudgetStatus, ProjectBudgetCategory } from '../../types/projectBudget';
 import { formatCurrency, formatDate } from '../../lib/utils';
 import { MonthlyAllocationModal } from './MonthlyAllocationModal';
+import { shouldHideProjectBudget } from '../../lib/projectBudget.utils';
 
 interface ProjectBudgetListProps {
   onCreateNew?: () => void;
@@ -98,8 +99,8 @@ export const ProjectBudgetList: React.FC<ProjectBudgetListProps> = ({
   };
 
   const filteredBudgets = filter === 'ALL' 
-    ? projectBudgets 
-    : projectBudgets.filter(budget => budget.status === filter);
+    ? projectBudgets.filter(budget => !shouldHideProjectBudget(budget)) // Masquer les budgets expirés
+    : projectBudgets.filter(budget => budget.status === filter && !shouldHideProjectBudget(budget));
 
   if (isLoadingProjectBudgets) {
     return (
