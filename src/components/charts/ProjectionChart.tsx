@@ -41,10 +41,20 @@ export function ProjectionChart() {
     events: (point as any).events,
   }));
 
-  // Calcul des statistiques
+  // Calcul des statistiques - utiliser le solde réel de l'API balance
   const currentBalance = balance?.currentBalance || 0;
+  const firstProjectionBalance = chartData[0]?.balance || currentBalance;
   const finalBalance = chartData[chartData.length - 1]?.balance || currentBalance;
-  const balanceChange = finalBalance - currentBalance;
+  
+  // Si le premier point de la projection diffère du solde actuel, ajuster tous les points
+  const balanceOffset = currentBalance - firstProjectionBalance;
+  if (balanceOffset !== 0) {
+    chartData.forEach(point => {
+      point.balance += balanceOffset;
+    });
+  }
+  
+  const balanceChange = finalBalance + balanceOffset - currentBalance;
   const minBalance = Math.min(...chartData.map(d => d.balance));
   const maxBalance = Math.max(...chartData.map(d => d.balance));
   const hasNegativeProjection = minBalance < 0;
@@ -61,8 +71,7 @@ export function ProjectionChart() {
     const firstAvg = firstHalf.reduce((sum, point) => sum + point.balance, 0) / firstHalf.length;
     const secondAvg = secondHalf.reduce((sum, point) => sum + point.balance, 0) / secondHalf.length;
     
-    // La tendance est positive si la seconde moitié est meilleure que la première
-    // et si le changement final est aussi positif (ou neutre si petit changement)
+
     const halfTrend = secondAvg > firstAvg;
     const overallTrend = balanceChange >= -10; // Tolérance de -10€ pour les petites variations
     
@@ -74,7 +83,7 @@ export function ProjectionChart() {
   // Configuration des couleurs et symbole monétaire
   const currencySymbol = user?.currency === 'USD' ? '$' : user?.currency === 'GBP' ? '£' : '€';
 
-  // Custom tooltip amélioré avec données dynamiques
+
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;

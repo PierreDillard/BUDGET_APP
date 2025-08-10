@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Edit, Trash2, Calendar, CheckCircle, Clock, Euro, Loader2 } from "lucide-react";
 import { useBudgetStore } from "@/store/budgetStore";
 import { PlannedExpenseModal } from "@/components/modals/PlannedExpenseModal";
-import { filterActiveOrSpentPlannedExpenses, sortPlannedExpensesByDate } from "@/lib/plannedExpense.utils";
+import { sortPlannedExpensesByDate } from "@/lib/plannedExpense.utils";
 import type { PlannedExpense } from "@/types";
 
 export function PlannedExpensesScreen() {
@@ -20,6 +20,27 @@ export function PlannedExpensesScreen() {
     isLoading,
     user
   } = useBudgetStore();
+
+  // Auto-mark today's expenses as spent
+  useEffect(() => {
+    const markTodayExpenses = async () => {
+      const todayExpenses = plannedExpenses.filter(expense => 
+        !expense.spent && isToday(expense.date)
+      );
+      
+      for (const expense of todayExpenses) {
+        try {
+          await markPlannedExpenseAsSpent(expense.id);
+        } catch (error) {
+          console.error('Erreur lors du marquage automatique:', error);
+        }
+      }
+    };
+
+    if (plannedExpenses.length > 0) {
+      markTodayExpenses();
+    }
+  }, [plannedExpenses, markPlannedExpenseAsSpent]);
 
   const handleAdd = () => {
     setSelectedExpense(undefined);
@@ -76,41 +97,42 @@ export function PlannedExpensesScreen() {
     });
   };
 
-  const isUpcoming = (dateString: string) => {
+  const isToday = (dateString: string) => {
     const expenseDate = new Date(dateString);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     expenseDate.setHours(0, 0, 0, 0);
-    return expenseDate >= today;
+    return expenseDate.getTime() === today.getTime();
   };
 
-  const isPast = (dateString: string) => {
-    const expenseDate = new Date(dateString);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    expenseDate.setHours(0, 0, 0, 0);
-    return expenseDate < today;
-  };
 
-  // Filter and sort expenses - remove expired unspent items
-  const activeExpenses = filterActiveOrSpentPlannedExpenses(plannedExpenses);
-  const sortedExpenses = sortPlannedExpensesByDate(activeExpenses);
+  // Filter expenses: only show spent expenses and today's expenses
+  const visibleExpenses = plannedExpenses.filter(expense => {
+    // Always show already spent expenses
+    if (expense.spent) {
+      return true;
+    }
+    // Show today's expenses (they will be marked as spent)
+    if (isToday(expense.date)) {
+      return true;
+    }
+    // Hide future expenses
+    return false;
+  });
+  
+  const sortedExpenses = sortPlannedExpensesByDate(visibleExpenses);
 
-  // Calculate statistics using active expenses only
-  const totalPlanned = activeExpenses.reduce((sum, expense) => sum + expense.amount, 0);
-  const totalSpent = activeExpenses
+  // Calculate statistics using visible expenses only
+  const totalPlanned = visibleExpenses.reduce((sum, expense) => sum + expense.amount, 0);
+  const totalSpent = visibleExpenses
     .filter(expense => expense.spent)
     .reduce((sum, expense) => sum + expense.amount, 0);
-  const totalRemaining = activeExpenses
+  const totalRemaining = visibleExpenses
     .filter(expense => !expense.spent)
     .reduce((sum, expense) => sum + expense.amount, 0);
 
-  const upcomingCount = activeExpenses.filter(expense => 
-    !expense.spent && isUpcoming(expense.date)
-  ).length;
-
-  const overdueCount = activeExpenses.filter(expense => 
-    !expense.spent && isPast(expense.date)
+  const todayCount = visibleExpenses.filter(expense => 
+    !expense.spent && isToday(expense.date)
   ).length;
 
   if (isLoading && plannedExpenses.length === 0) {
@@ -150,7 +172,7 @@ border border-blue-300/30 shadow-md">
                   {formatCurrency(totalPlanned)}
                 </h3>
                 <p className="text-xs text-black mt-1">
-                  {activeExpenses.length} budget{activeExpenses.length > 1 ? 's' : ''}
+                  {visibleExpenses.length} budget{visibleExpenses.length > 1 ? 's' : ''}
                 </p>
               </div>
               <Calendar className="h-8 w-8 text-black" />
@@ -167,7 +189,7 @@ border border-blue-300/30 shadow-md">
                   {formatCurrency(totalSpent)}
                 </h3>
                 <p className="text-xs text-green-600 mt-1">
-                  {activeExpenses.filter(e => e.spent).length} terminé{activeExpenses.filter(e => e.spent).length > 1 ? 's' : ''}
+                  {visibleExpenses.filter(e => e.spent).length} terminé{visibleExpenses.filter(e => e.spent).length > 1 ? 's' : ''}
                 </p>
               </div>
               <CheckCircle className="h-8 w-8 text-green-600" />
@@ -184,7 +206,7 @@ border border-blue-300/30 shadow-md">
                   {formatCurrency(totalRemaining)}
                 </h3>
                 <p className="text-xs text-orange-600 mt-1">
-                  {upcomingCount} à venir
+                  {todayCount} aujourd'hui
                 </p>
               </div>
               <Clock className="h-8 w-8 text-orange-600" />
@@ -192,31 +214,13 @@ border border-blue-300/30 shadow-md">
           </CardContent>
         </Card>
 
-        {overdueCount > 0 && (
-          <Card className="backdrop-blur-lg bg-red-100/40 border border-red-300/30 shadow-md">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-red-700">En retard</p>
-                  <h3 className="text-2xl font-bold text-red-800">
-                    {overdueCount}
-                  </h3>
-                  <p className="text-xs text-red-600 mt-1">
-                    Budget{overdueCount > 1 ? 's' : ''} en retard
-                  </p>
-                </div>
-                <Clock className="h-8 w-8 text-red-600" />
-              </div>
-            </CardContent>
-          </Card>
-        )}
       </div>
 
       {/* Expenses List */}
       <Card className="backdrop-blur-lg bg-white/40  hover:bg-white/60 transition-colors duration-200 border border-white/30 shadow-lg">
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
-            <span>Liste des budgets ({activeExpenses.length})</span>
+            <span>Liste des budgets ({visibleExpenses.length})</span>
             <Button 
               onClick={handleAdd} 
               size="sm"
@@ -228,7 +232,7 @@ border border-blue-300/30 shadow-md">
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {activeExpenses.length === 0 ? (
+          {visibleExpenses.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <p>Aucun budget planifié</p>
@@ -245,8 +249,7 @@ border border-blue-300/30 shadow-md">
           ) : (
             <div className="space-y-3">
               {sortedExpenses.map((expense) => {
-          
-                const isExpensePast = isPast(expense.date);
+                const isTodayExpense = isToday(expense.date);
                 
                 return (
                   <div
@@ -254,8 +257,8 @@ border border-blue-300/30 shadow-md">
                     className={`flex items-center justify-between p-4 rounded-lg border transition-colors ${
                       expense.spent 
                         ? 'border-green-300/40 bg-green-50/40' 
-                        : isExpensePast && !expense.spent
-                        ? 'border-red-300/40 bg-red-50/40'
+                        : isTodayExpense
+                        ? 'border-blue-300/40 bg-blue-50/40'
                         : 'border-white/20 bg-white/20 hover:bg-white/30'
                     }`}
                   >
@@ -272,17 +275,12 @@ border border-blue-300/30 shadow-md">
                             <CheckCircle className="h-3 w-3 mr-1" />
                             Dépensé
                           </Badge>
-                        ) : isExpensePast ? (
-                          <Badge variant="destructive">
-                            <Clock className="h-3 w-3 mr-1" />
-                            En retard
+                        ) : isTodayExpense ? (
+                          <Badge variant="default" className="bg-blue-600 text-white">
+                            <Calendar className="h-3 w-3 mr-1" />
+                            Aujourd'hui
                           </Badge>
-                        ) : (
-                          <Badge variant="secondary">
-                            <Clock className="h-3 w-3 mr-1" />
-                            À venir
-                          </Badge>
-                        )}
+                        ) : null}
                       </div>
                       
                       <div className="flex items-center gap-4 text-sm text-gray-600">
