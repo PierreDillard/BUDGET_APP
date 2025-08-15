@@ -1,0 +1,45 @@
+name:  Budget App CI/CD
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:  # Permettre le déclenchement manuel
+
+jobs:
+  # =================================
+  # BUILD & DEPLOY
+  # =================================
+  deploy:
+    name: 🚀 Build & Deploy to Production
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        
+      - name: 🏗️ Deploy to server
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.PRODUCTION_HOST }}
+          username: ${{ secrets.PRODUCTION_USER }}
+          key: ${{ secrets.PRODUCTION_SSH_KEY }}
+          # Debug pour vérifier la connexion
+          debug: true
+          script: |
+            cd /opt/budget-app
+            
+            echo "🔄 Pulling latest changes..."
+            git pull origin master
+            
+            echo "🚀 Starting deployment..."
+            chmod +x deploy.sh
+            ./deploy.sh production
+            
+            echo "🔍 Checking deployment status..."
+            docker compose -f docker-compose.prod.yml --env-file .env.prod ps
+            
+            echo "🧪 Testing health endpoint..."
+            sleep 10
+            curl -f http://localhost:3001 || echo "⚠️ Health check failed"
+            
+            echo "🎉 Deployment completed!"
