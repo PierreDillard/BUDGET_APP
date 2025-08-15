@@ -556,55 +556,6 @@ export class BalanceService {
     }
   }
 
-  private async calculateMonthlyIncomes(user_id: string): Promise<number> {
-    try {
-      const incomes = await this.prisma.rec_incomes.findMany({
-        where: { user_id },
-      });
-
-      const today = new Date();
-      const currentMonth = today.getMonth() + 1;
-      const currentYear = today.getFullYear();
-
-      return incomes.reduce((total, income) => {
-        const frequency = this.convertStringToFrequencyType((income as any).frequency);
-        const frequencyData = (income as any).frequency_data as FrequencyData || null;
-        
-        // Ne compter que si c'est dû ce mois-ci
-        if (isDueInMonth(frequency, frequencyData, (income as any).day_of_month, currentMonth, currentYear)) {
-          return total + income.amount;
-        }
-        return total;
-      }, 0);
-    } catch (error) {
-      this.logger.error('Error calculating monthly incomes:', error);
-      return 0;
-    }
-  }
-
-  private async calculateMonthlyExpenses(user_id: string): Promise<number> {
-    try {
-      const expenses = await this.prisma.rec_expenses.findMany({
-        where: { user_id },
-      });
-
-      const today = new Date();
-      const currentMonth = today.getMonth() + 1;
-      const currentYear = today.getFullYear();
-
-      return expenses.reduce((total, expense) => {
-        const frequency = this.convertStringToFrequencyType((expense as any).frequency);
-        const frequencyData = (expense as any).frequency_data as FrequencyData || null;
-        
-        // Ne compter que si c'est dû ce mois-ci
-        if (isDueInMonth(frequency, frequencyData, (expense as any).day_of_month, currentMonth, currentYear)) {
-          return total + expense.amount;
-        }
-        return total;
-      }, 0);
-    } catch (error) {
-      this.logger.error('Error calculating monthly expenses:', error);
-      return 0;
-    }
-  }
 }
+
+

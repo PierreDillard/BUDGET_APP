@@ -110,7 +110,7 @@ export function PlannedExpensesScreen() {
   const visibleExpenses = plannedExpenses.filter(expense => {
     // Always show already spent expenses
     if (expense.spent) {
-      return true;
+      return false;
     }
     // Show today's expenses (they will be marked as spent)
     if (isToday(expense.date)) {
